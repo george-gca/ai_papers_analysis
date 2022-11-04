@@ -108,7 +108,7 @@ def _filter_and_cluster_papers(new_words_usage: List[Tuple[str, int]], conferenc
     name = f'{conference}_{year}_papers_with_new_words'
 
     _logger.print(f'\nStep 1: Build paper representation vectors with fasttext.')
-    p2v.build_paper_vectors(f'abstracts_{args.max_ngram}gram.feather', filter_titles=papers_to_keep)
+    p2v.build_paper_vectors(data_dir / f'abstracts_{args.max_ngram}gram.feather', suffix='_pwc', filter_titles=papers_to_keep)
 
     # log conference paper vectors to comet ml
     paper_titles = [['Title', 'Conference', 'Year', 'PDF']]
