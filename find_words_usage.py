@@ -107,10 +107,8 @@ def _filter_and_cluster_papers(new_words_usage: List[Tuple[str, int]], conferenc
     # comet ml logging
     name = f'{conference}_{year}_papers_with_new_words'
 
-    _logger.print(
-        f'\nStep 1: Build paper representation vectors with fasttext.')
-    p2v.build_paper_vectors(
-        f'abstracts_{args.max_ngram}gram.feather', filter_titles=papers_to_keep, filter_if_absent=True)
+    _logger.print(f'\nStep 1: Build paper representation vectors with fasttext.')
+    p2v.build_paper_vectors(f'abstracts_{args.max_ngram}gram.feather', filter_titles=papers_to_keep)
 
     # log conference paper vectors to comet ml
     paper_titles = [['Title', 'Conference', 'Year', 'PDF']]
@@ -210,7 +208,7 @@ if __name__ == '__main__':
 
     log_dir = Path('logs/').expanduser()
     log_dir.mkdir(exist_ok=True)
-    setup_log(args, log_dir / 'find_words_usage.log')
+    setup_log(args.log_level, log_dir / 'find_words_usage.log')
 
     ignore_set = {
         'accuracy',
