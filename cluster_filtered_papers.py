@@ -96,8 +96,7 @@ def filter_and_cluster_papers(args: argparse.Namespace):
     else:
         name = args.name
 
-    experiment = comet_ml.Experiment(
-        project_name='AI Papers', auto_metric_logging=False)
+    experiment = comet_ml.Experiment(project_name='AI Papers', auto_metric_logging=False)
     experiment.set_name(name)
     experiment.log_parameters(args)
 

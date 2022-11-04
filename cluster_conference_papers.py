@@ -75,8 +75,7 @@ if __name__ == '__main__':
     ]
 
     # comet ml logging
-    experiment = comet_ml.Experiment(
-        project_name='AI Papers', auto_metric_logging=False)
+    experiment = comet_ml.Experiment(project_name='AI Papers', auto_metric_logging=False)
     experiment.set_name(f'Cluster Conference Papers')
     experiment.log_parameters(args)
 

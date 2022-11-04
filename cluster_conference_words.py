@@ -21,8 +21,7 @@ _logger = logging.getLogger(__name__)
 
 
 def _add_abstract(row: pd.Series, unique_words: List[str]) -> None:
-    title = row.clean_title
-    words_list = title.split()
+    words_list = row.clean_title.split()
     words_list += row.abstract.split()
     unique_words += list(set(words_list))
 
@@ -80,8 +79,7 @@ if __name__ == '__main__':
     p2v.load_words_model(str(model_dir / f'fasttext_{args.model}_50000w.bin'))
 
     # comet ml logging
-    experiment = comet_ml.Experiment(
-        project_name='AI Papers', auto_metric_logging=False)
+    experiment = comet_ml.Experiment(project_name='AI Papers', auto_metric_logging=False)
     experiment.set_name(f'Cluster Conference Words')
     experiment.log_parameters(args)
 
