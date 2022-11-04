@@ -2,9 +2,6 @@
 
 Trying to understand trends in the latest AI papers.
 
-## TODO
-add info about comet.ml
-
 ## Requirements
 
 [Docker](https://www.docker.com/) or, for local installation:
@@ -65,3 +62,19 @@ This script clusters the words from a specific conference/year.
 ### cluster_filtered_papers.py
 
 This script clusters the papers that contain a specific word or similar words.
+
+## Visualizing Data
+
+The best way to visualize the embeddings is through the [Embedding Projector](https://projector.tensorflow.org/), which I use inside [Comet](https://www.comet.ml/). If you want to use Comet, just create a file named `.comet.config` in the root folder here, and add the following lines:
+
+```config
+[comet]
+api_key=YOUR_API_KEY
+```
+
+An example of these experiments logged in Comet can be found [here](https://www.comet.com/george-gca/ai-papers/). To visualize the embeddings, click on the experiment on the left, then navigate to `Assets & Artifacts`, open the `embeddings` directory, and click `Open in Embedding Projector`.
+
+![How to open embedding](img/comet_embedding.png)
+
+## TODO
+- create n-gram from abstracts before clustering
