@@ -71,5 +71,8 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
     && locale-gen
 
 ENV LC_ALL pt_BR.UTF-8
+# handle bug with top2vec
+# RuntimeError: cannot cache function 'rdist': no locator available for file '/usr/local/lib/python3.10/site-packages/umap/layouts.py'
+ENV NUMBA_CACHE_DIR=/tmp/numba_cache
 
 USER $USERNAME
