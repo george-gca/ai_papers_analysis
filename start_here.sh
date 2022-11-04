@@ -4,7 +4,7 @@ if [[ $HOSTNAME != "docker-"* ]] && (hash poetry 2>/dev/null); then
     run_command="poetry run"
 fi
 
-cluster_conferences=1
+# cluster_conferences=1
 find_words_usage_over_conf=1
 
 n_clusters=100
@@ -87,6 +87,6 @@ if [ -n "$find_words_usage_over_conf" ]; then
         "wacv"
     )
     for conference in "${conferences[@]}"; do
-        $run_command python find_words_usage.py --suffix "_$n_clusters"_clusters -c $conference
+        $run_command python find_words_usage.py --suffix _50000w_150_clusters_pwc -c $conference
     done
 fi
