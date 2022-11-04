@@ -127,3 +127,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Local directories
+data/
+logs/
+model_data/
+
+# Comet.ml configuration file
+.comet.config
