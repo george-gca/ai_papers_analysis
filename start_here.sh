@@ -5,7 +5,7 @@ if [[ $HOSTNAME != "docker-"* ]] && (hash poetry 2>/dev/null); then
 fi
 
 # cluster_conferences=1
-find_words_usage_over_conf=1
+# find_words_usage_over_conf=1
 top2vec=1
 
 n_clusters=100
@@ -92,6 +92,6 @@ if [ -n "$find_words_usage_over_conf" ]; then
     done
 fi
 
-if [ -n "$top2vec" ]; then]
-    $run_command python create_corpus_from_pdfs.py
+if [ -n "$top2vec" ]; then
+    $run_command python create_corpus_from_pdfs.py -c
 fi
