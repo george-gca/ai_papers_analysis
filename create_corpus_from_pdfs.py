@@ -26,13 +26,13 @@ if __name__ == '__main__':
                         help='log level to debug')
     parser.add_argument('--speed', type=str, default='learn',
                         choices=['fast-learn', 'learn', 'deep-learn'])
-    parser.add_argument('-s', '--separator', type=str, default='<#sep#>',
+    parser.add_argument('-s', '--separator', type=str, default='|',
                         help='csv separator')
     args = parser.parse_args()
 
     log_dir = Path('logs/').expanduser()
     log_dir.mkdir(exist_ok=True)
-    setup_log(args, log_dir / 'train_top2vec.log')
+    setup_log(args.log_level, log_dir / 'train_top2vec.log')
 
     if args.create_corpus:
         corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs]
@@ -44,11 +44,9 @@ if __name__ == '__main__':
         for corpus_file in pbar_files:
             pbar_files.set_description(str(corpus_file.parents[0]).replace(str(corpus_file.parents[2]), '')[1:])
             if len(args.separator) == 1:
-                df = pd.read_csv(corpus_file, sep=args.separator,
-                                dtype=str, keep_default_na=False)
+                df = pd.read_csv(corpus_file, sep=args.separator, dtype=str, keep_default_na=False)
             else:
-                df = pd.read_csv(corpus_file, sep=args.separator,
-                                dtype=str, engine='python', keep_default_na=False)
+                df = pd.read_csv(corpus_file, sep=args.separator, dtype=str, engine='python', keep_default_na=False)
 
             for title, text in zip(tqdm(df['title'], leave=False), df['paper']):
                 if title.lower() in titles_set:
