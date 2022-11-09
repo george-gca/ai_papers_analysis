@@ -36,31 +36,42 @@ if __name__ == '__main__':
 
     if args.create_corpus:
         corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs]
+        url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs]
+
         all_titles = Path(f'data/papers_titles.txt').open('w')
         all_texts = Path(f'data/papers_content.txt').open('w')
-        pbar_files = tqdm(corpus_files)
+        all_urls = Path(f'data/papers_urls.txt').open('w')
+
+        pbar_files = zip(tqdm(corpus_files), url_files)
         titles_set = set()
 
-        for corpus_file in pbar_files:
+        for corpus_file, url_file in pbar_files:
             pbar_files.set_description(str(corpus_file.parents[0]).replace(str(corpus_file.parents[2]), '')[1:])
             if len(args.separator) == 1:
                 df = pd.read_csv(corpus_file, sep=args.separator, dtype=str, keep_default_na=False)
             else:
                 df = pd.read_csv(corpus_file, sep=args.separator, dtype=str, engine='python', keep_default_na=False)
 
-            for title, text in zip(tqdm(df['title'], leave=False), df['paper']):
+            df_url = pd.read_csv(url_file, sep=';', dtype=str, keep_default_na=False)
+            assert len(df) == len(df_url), f'df ({len(df)}) and df_url ({len(df_url)}) should have same size'
+            df = df.join(df_url['abstract_url'])
+
+            for title, text, url in zip(tqdm(df['title'], leave=False), df['paper'], df['abstract_url']):
                 if title.lower() in titles_set:
                     continue
 
                 titles_set.add(title.lower())
                 all_titles.write(f'{title}\n')
                 all_texts.write(f'{text}\n')
+                all_urls.write(f'{url}\n')
 
             all_titles.flush()
             all_texts.flush()
+            all_urls.flush()
 
         all_titles.close()
         all_texts.close()
+        all_urls.close()
 
     all_titles = Path(f'data/papers_titles.txt').read_text().strip().split('\n')
     all_texts = Path(f'data/papers_content.txt').read_text().strip().split('\n')
