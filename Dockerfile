@@ -47,6 +47,7 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
     $PIP_INSTALL \
         colorama \
         comet-ml \
+        git+https://github.com/george-gca/Doc2Map \
         fasttext \
         ipdb \
         ipython \
