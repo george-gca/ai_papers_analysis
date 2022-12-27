@@ -125,9 +125,12 @@ if __name__ == '__main__':
 
     for keyword in args.search:
         _logger.print(f'\nSearching for {args.n_topics} topics related to "{keyword}"')
-        topic_words, word_scores, topic_scores, topic_nums = model.search_topics(keywords=[keyword], num_topics=args.n_topics)
-        for topic_num, topic_score, words, scores in zip(topic_nums, topic_scores, topic_words, word_scores):
-            _logger.print(f'\nTopic {topic_num} has score {topic_score:.3f}')
-            topic_word_scores = [f'{score:.3f} - {word}' for score, word in zip(scores, words)]
-            topic_word_scores_str = '\n\t'.join(topic_word_scores)
-            _logger.print(f'Most similar words:\n\t{topic_word_scores_str}')
+        try:
+            topic_words, word_scores, topic_scores, topic_nums = model.search_topics(keywords=[keyword], num_topics=args.n_topics)
+            for topic_num, topic_score, words, scores in zip(topic_nums, topic_scores, topic_words, word_scores):
+                _logger.print(f'\nTopic {topic_num} has score {topic_score:.3f}')
+                topic_word_scores = [f'{score:.3f} - {word}' for score, word in zip(scores, words)]
+                topic_word_scores_str = '\n\t'.join(topic_word_scores)
+                _logger.print(f'Most similar words:\n\t{topic_word_scores_str}')
+        except ValueError:
+            _logger.print(f'\n"{keyword}" has not been learned by the model so it cannot be searched')
