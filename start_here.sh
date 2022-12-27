@@ -6,24 +6,11 @@ fi
 
 # cluster_conferences=1
 # find_words_usage_over_conf=1
+# n_clusters=100
+# train_top2vec=1
 top2vec=1
 
-n_clusters=100
-
-# https://github.com/awslabs/autogluon/issues/1020#issuecomment-926089808
-export OPENBLAS_NUM_THREADS=15
-export GOTO_NUM_THREADS=15
-export OMP_NUM_THREADS=15
-
-if [ -n "$cluster_conferences" ]; then
-    echo -e "\nClustering conferences' words"
-    $run_command python cluster_conference_words.py --clusters $n_clusters --word_dim 3 -l info
-
-    echo -e "\nClustering conferences' papers"
-    $run_command python cluster_conference_papers.py --clusters $n_clusters --paper_dim 3 -l info
-
-    echo -e "\nClustering search results"
-    searches=(
+searches=(
       "bert"
       "bert_based"
       "capsule"
@@ -41,24 +28,32 @@ if [ -n "$cluster_conferences" ]; then
       "multimodal pre_training"
       "new_dataset"
       "new_multimodal_dataset"
-      "question_answering"
       "pre_training"
       "rationale"
       "representation_learning"
       "scene_graph"
       "survey"
       "transformer"
-      "visual_dialog"
-      "visual_dialog generative"
-      "visual_dialog pre_training"
-      "visual_dialog new_dataset"
-      "visual_entailment"
       "visual_question_answering"
       "visual_question_answering new_dataset"
       "visual_reasoning"
       "vqa"
     )
 
+
+# https://github.com/awslabs/autogluon/issues/1020#issuecomment-926089808
+export OPENBLAS_NUM_THREADS=15
+export GOTO_NUM_THREADS=15
+export OMP_NUM_THREADS=15
+
+if [ -n "$cluster_conferences" ]; then
+    echo -e "\nClustering conferences' words"
+    $run_command python cluster_conference_words.py --clusters $n_clusters --word_dim 3 -l info
+
+    echo -e "\nClustering conferences' papers"
+    $run_command python cluster_conference_papers.py --clusters $n_clusters --paper_dim 3 -l info
+
+    echo -e "\nClustering search results"
     year=2022
     for search in "${searches[@]}"; do
     	$run_command python cluster_filtered_papers.py "$search" -l info --name "$search" --clusters 10 -p 3 --suffix _50000w_150_clusters_pwc -y $year
@@ -92,6 +87,8 @@ if [ -n "$find_words_usage_over_conf" ]; then
     done
 fi
 
-if [ -n "$top2vec" ]; then
-    $run_command python create_corpus_from_pdfs.py -c
+if [ -n "$train_top2vec" ]; then
+    $run_command python top2vec_model.py -c -t --search "${searches[*]}"
+elif [ -n "$top2vec" ]; then
+    $run_command python top2vec_model.py --search "${searches[*]}"
 fi
