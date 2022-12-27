@@ -88,7 +88,7 @@ if [ -n "$find_words_usage_over_conf" ]; then
 fi
 
 if [ -n "$train_top2vec" ]; then
-    $run_command python top2vec_model.py -c -t --search "${searches[*]}"
+    $run_command python top2vec_model.py -c -t --search ${searches[*]}
 elif [ -n "$top2vec" ]; then
-    $run_command python top2vec_model.py --search "${searches[*]}"
+    $run_command python top2vec_model.py --search ${searches[*]}
 fi
