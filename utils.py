@@ -3,6 +3,9 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Union
 
+import pandas as pd
+from tqdm import tqdm
+
 
 supported_conferences = [
     'aaai/2017',
@@ -103,6 +106,75 @@ supported_conferences = [
 
 
 conferences_pdfs = [c for c in supported_conferences if not c.startswith('kdd') and not c.startswith('sigchi')]
+
+
+def create_corpus(separator: str, conference: str, year: int) -> None:
+    if len(conference) > 0 and year > 0:
+        corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs if c == f'{conference}/{year}']
+        url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs if c == f'{conference}/{year}']
+
+        all_titles = Path(f'data/{conference}_{year}_papers_titles.txt').open('w')
+        all_texts = Path(f'data/{conference}_{year}_papers_contents.txt').open('w')
+        all_urls = Path(f'data/{conference}_{year}_papers_urls.txt').open('w')
+    elif len(conference) > 0:
+        corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs if c.startswith(conference)]
+        url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs if c.startswith(conference)]
+
+        all_titles = Path(f'data/{conference}_papers_titles.txt').open('w')
+        all_texts = Path(f'data/{conference}_papers_contents.txt').open('w')
+        all_urls = Path(f'data/{conference}_papers_urls.txt').open('w')
+    elif year > 0:
+        corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs if c.endswith(str(year))]
+        url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs if c.endswith(str(year))]
+
+        all_titles = Path(f'data/{year}_papers_titles.txt').open('w')
+        all_texts = Path(f'data/{year}_papers_contents.txt').open('w')
+        all_urls = Path(f'data/{year}_papers_urls.txt').open('w')
+    else:
+        corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs]
+        url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs]
+
+        all_titles = Path(f'data/papers_titles.txt').open('w')
+        all_texts = Path(f'data/papers_contents.txt').open('w')
+        all_urls = Path(f'data/papers_urls.txt').open('w')
+
+
+    pbar_files = tqdm(corpus_files)
+    titles_set = set()
+
+    for i, (corpus_file, url_file) in enumerate(zip(pbar_files, url_files)):
+        pbar_files.set_description(str(corpus_file.parents[0]).replace(str(corpus_file.parents[2]), '')[1:])
+        if len(separator) == 1:
+            df = pd.read_csv(corpus_file, sep=separator, dtype=str, keep_default_na=False)
+        else:
+            df = pd.read_csv(corpus_file, sep=separator, dtype=str, engine='python', keep_default_na=False)
+
+        df_url = pd.read_csv(url_file, sep=';', dtype=str, keep_default_na=False)
+        if len(df) < len(df_url):
+            # drop extra urls
+            papers_titles = set(df['title'])
+            df_url = df_url[df_url['title'].isin(papers_titles)]
+
+        assert len(df) == len(df_url), f'df ({len(df)}) and df_url ({len(df_url)}) should have same size'
+        df = df.join(df_url['abstract_url'].astype(str))
+
+        for title, text, url in zip(tqdm(df['title'], leave=False), df['paper'], df['abstract_url']):
+            if title.lower() in titles_set:
+                continue
+
+            titles_set.add(title.lower())
+            all_titles.write(f'{title}\n')
+            all_texts.write(f'{text}\n')
+            conf, year = conferences_pdfs[i].split('/')
+            all_urls.write(f'{recreate_url(str(url), conf, int(year), is_abstract=True)}\n')
+
+        all_titles.flush()
+        all_texts.flush()
+        all_urls.flush()
+
+    all_titles.close()
+    all_texts.close()
+    all_urls.close()
 
 
 def recreate_url(url_str: str, conference: str, year: int, is_abstract: bool = False) -> str:
