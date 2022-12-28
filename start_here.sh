@@ -8,7 +8,8 @@ fi
 # find_words_usage_over_conf=1
 # n_clusters=100
 # train_top2vec=1
-top2vec=1
+# top2vec=1
+doc2map=1
 
 searches=(
       "bert"
@@ -88,9 +89,14 @@ if [ -n "$find_words_usage_over_conf" ]; then
 fi
 
 if [ -n "$train_top2vec" ]; then
-    $run_command python top2vec_model.py -c -t --search ${searches[*]}
     $run_command python top2vec_model.py -c -t --year 2022
+    $run_command python top2vec_model.py -c -t --search ${searches[*]}
 elif [ -n "$top2vec" ]; then
-    $run_command python top2vec_model.py --search ${searches[*]}
     $run_command python top2vec_model.py --year 2022
+    $run_command python top2vec_model.py --search ${searches[*]}
+fi
+
+if [ -n "$doc2map" ]; then
+    $run_command python doc2map.py --year 2022
+    # $run_command python doc2map.py
 fi
