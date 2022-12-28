@@ -135,6 +135,7 @@ def filter_and_cluster_papers(args: argparse.Namespace):
             f'cluster {i+1:02d} keywords: {", ".join(cluster_keywords)}')
 
     experiment.log_asset(str(log_dir / 'cluster_filtered_papers.log'))
+    experiment.end()
 
 
 
