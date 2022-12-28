@@ -74,12 +74,12 @@ if __name__ == '__main__':
         'training'
     ]
 
-    # comet ml logging
-    experiment = comet_ml.Experiment(project_name='AI Papers', auto_metric_logging=False)
-    experiment.set_name(f'Cluster Conference Papers')
-    experiment.log_parameters(args)
-
     for i, abstract_file in enumerate(abstract_files):
+        # comet ml logging
+        experiment = comet_ml.Experiment(project_name='AI Papers', auto_metric_logging=False)
+        experiment.set_name(f'Cluster {" ".join(conferences[i].split("/"))} papers')
+        experiment.log_parameters(args)
+
         _logger.print(
             f'\nStep 1: Build paper representation vectors for {conferences[i]} with fasttext.')
         p2v.build_paper_vectors(abstract_file)
@@ -115,4 +115,5 @@ if __name__ == '__main__':
             _logger.print(
                 f'cluster {i+1:02d} keywords: {", ".join(cluster_keywords)}')
 
-    experiment.log_asset(str(log_dir / 'cluster_conference_papers.log'))
+        experiment.log_asset(str(log_dir / 'cluster_conference_papers.log'))
+        experiment.end()

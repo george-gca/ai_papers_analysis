@@ -78,12 +78,12 @@ if __name__ == '__main__':
     p2v = PaperFinderTrainer(data_dir=data_dir, model_dir=model_dir)
     p2v.load_words_model(str(model_dir / f'fasttext_{args.model}_50000w.bin'))
 
-    # comet ml logging
-    experiment = comet_ml.Experiment(project_name='AI Papers', auto_metric_logging=False)
-    experiment.set_name(f'Cluster Conference Words')
-    experiment.log_parameters(args)
-
     for i, abstract_file in enumerate(abstract_files):
+        # comet ml logging
+        experiment = comet_ml.Experiment(project_name='AI Papers', auto_metric_logging=False)
+        experiment.set_name(f'Cluster {" ".join(conferences[i].split("/"))} words')
+        experiment.log_parameters(args)
+
         abstract_unique_words = []
         df = pd.read_csv(abstract_file, sep='|', dtype=str, keep_default_na=False)
         # df = pd.read_feather(abstract_file)
@@ -134,6 +134,7 @@ if __name__ == '__main__':
                                  title=f'{name}_clusters',
                                  template_filename=f'{name}_clusters')
 
-        print()
+        experiment.log_asset(str(log_dir / 'cluster_conference_words.log'))
+        experiment.end()
 
-    experiment.log_asset(str(log_dir / 'cluster_conference_words.log'))
+        print()
