@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     log_dir = Path('logs/').expanduser()
     log_dir.mkdir(exist_ok=True)
-    setup_log(args.log_level, log_dir / 'clusterize_conference_papers.log')
+    setup_log(args.log_level, log_dir / 'cluster_conference_papers.log')
 
     data_dir = Path(args.data_dir).expanduser()
     model_dir = Path(args.model_dir).expanduser()
@@ -115,4 +115,4 @@ if __name__ == '__main__':
             _logger.print(
                 f'cluster {i+1:02d} keywords: {", ".join(cluster_keywords)}')
 
-    experiment.log_asset(str(log_dir / 'clusterize_conference_papers.log'))
+    experiment.log_asset(str(log_dir / 'cluster_conference_papers.log'))

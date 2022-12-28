@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     log_dir = Path('logs/').expanduser()
     log_dir.mkdir(exist_ok=True)
-    setup_log(args.log_level, log_dir / 'clusterize_conference_words.log')
+    setup_log(args.log_level, log_dir / 'cluster_conference_words.log')
 
     data_dir = Path(args.data_dir).expanduser()
     model_dir = Path(args.model_dir).expanduser()
@@ -136,4 +136,4 @@ if __name__ == '__main__':
 
         print()
 
-    experiment.log_asset(str(log_dir / 'clusterize_conference_words.log'))
+    experiment.log_asset(str(log_dir / 'cluster_conference_words.log'))
