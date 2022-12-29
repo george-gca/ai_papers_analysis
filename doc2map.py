@@ -43,10 +43,6 @@ def _train_doc2map_model(speed: str, conference: str, year: int) -> None:
 
     # Generate the interactive map with automatic zoom (the first example)
     d2m.interactive_map(suffix=conf_year, display=False)
-
-    # Generate the interactive map with manual zoom (the second example)
-    d2m.plotly_interactive_map(suffix=conf_year, display=False)
-
     d2m.interactive_tree(suffix=conf_year, display=False)
 
     # You can also generate tree, to visualize in 3D the linkage of your documents
@@ -54,6 +50,10 @@ def _train_doc2map_model(speed: str, conference: str, year: int) -> None:
     d2m.display_tree(suffix=conf_year, display=False)
     d2m.display_simplified_tree(suffix=conf_year, display=False)
     d2m.scatter(suffix=conf_year, display=False)
+
+    # Generate the interactive map with manual zoom (the second example)
+    d2m.plotly_interactive_map(suffix=conf_year, display=False)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
