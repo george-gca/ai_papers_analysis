@@ -54,7 +54,7 @@ def _train_doc2map_model(speed: str, conference: str, year: int) -> None:
     d2m.scatter(suffix=conf_year, out_dir=out_dir, display=False)
 
     # Generate the interactive map with manual zoom (the second example)
-    d2m.plotly_interactive_map(suffix=conf_year, out_dir=out_dir, display=False)
+    # d2m.plotly_interactive_map(suffix=conf_year, out_dir=out_dir, display=False)
 
 
 if __name__ == '__main__':
