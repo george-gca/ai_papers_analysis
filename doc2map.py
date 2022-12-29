@@ -43,6 +43,7 @@ def _train_doc2map_model(speed: str, conference: str, year: int) -> None:
 
     # Generate the interactive map with automatic zoom (the first example)
     out_dir = f'doc2map/{conf_year[1:]}/'
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
     d2m.interactive_map(suffix=conf_year, out_dir=out_dir, display=False)
     d2m.interactive_tree(suffix=conf_year, out_dir=out_dir, display=False)
 
