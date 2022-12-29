@@ -110,21 +110,20 @@ conferences_pdfs = [c for c in supported_conferences if not c.startswith('kdd') 
 
 def create_corpus(separator: str, conference: str, year: int) -> None:
     if len(conference) > 0 and year > 0:
-        corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs if c == f'{conference}/{year}']
-        url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs if c == f'{conference}/{year}']
+        filtered_conferences = [c for c in conferences_pdfs if c == f'{conference}/{year}']
         suffix = f'_{conference}_{year}'
     elif len(conference) > 0:
-        corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs if c.startswith(conference)]
-        url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs if c.startswith(conference)]
+        filtered_conferences = [c for c in conferences_pdfs if c.startswith(conference)]
         suffix = f'_{conference}'
     elif year > 0:
-        corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs if c.endswith(str(year))]
-        url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs if c.endswith(str(year))]
+        filtered_conferences = [c for c in conferences_pdfs if c.endswith(str(year))]
         suffix = f'_{year}'
     else:
-        corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs]
-        url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs]
+        filtered_conferences = conferences_pdfs
         suffix = ''
+
+    corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in filtered_conferences]
+    url_files = [Path(f'data/{c}/paper_info.csv') for c in filtered_conferences]
 
     all_titles = Path(f'data/papers_titles{suffix}.txt').open('w')
     all_texts = Path(f'data/papers_contents{suffix}.txt').open('w')
@@ -156,7 +155,7 @@ def create_corpus(separator: str, conference: str, year: int) -> None:
             titles_set.add(title.lower())
             all_titles.write(f'{title}\n')
             all_texts.write(f'{text}\n')
-            conf, year = conferences_pdfs[i].split('/')
+            conf, year = filtered_conferences[i].split('/')
             all_urls.write(f'{recreate_url(str(url), conf, int(year), is_abstract=True)}\n')
 
         all_titles.flush()
