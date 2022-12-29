@@ -112,32 +112,23 @@ def create_corpus(separator: str, conference: str, year: int) -> None:
     if len(conference) > 0 and year > 0:
         corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs if c == f'{conference}/{year}']
         url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs if c == f'{conference}/{year}']
-
-        all_titles = Path(f'data/{conference}_{year}_papers_titles.txt').open('w')
-        all_texts = Path(f'data/{conference}_{year}_papers_contents.txt').open('w')
-        all_urls = Path(f'data/{conference}_{year}_papers_urls.txt').open('w')
+        suffix = f'_{conference}_{year}'
     elif len(conference) > 0:
         corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs if c.startswith(conference)]
         url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs if c.startswith(conference)]
-
-        all_titles = Path(f'data/{conference}_papers_titles.txt').open('w')
-        all_texts = Path(f'data/{conference}_papers_contents.txt').open('w')
-        all_urls = Path(f'data/{conference}_papers_urls.txt').open('w')
+        suffix = f'_{conference}'
     elif year > 0:
         corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs if c.endswith(str(year))]
         url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs if c.endswith(str(year))]
-
-        all_titles = Path(f'data/{year}_papers_titles.txt').open('w')
-        all_texts = Path(f'data/{year}_papers_contents.txt').open('w')
-        all_urls = Path(f'data/{year}_papers_urls.txt').open('w')
+        suffix = f'_{year}'
     else:
         corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs]
         url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs]
+        suffix = ''
 
-        all_titles = Path(f'data/papers_titles.txt').open('w')
-        all_texts = Path(f'data/papers_contents.txt').open('w')
-        all_urls = Path(f'data/papers_urls.txt').open('w')
-
+    all_titles = Path(f'data/papers_titles{suffix}.txt').open('w')
+    all_texts = Path(f'data/papers_contents{suffix}.txt').open('w')
+    all_urls = Path(f'data/papers_urls{suffix}.txt').open('w')
 
     pbar_files = tqdm(corpus_files)
     titles_set = set()
