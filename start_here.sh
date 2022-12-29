@@ -198,9 +198,11 @@ if [ -n "$doc2map" ]; then
     for conference in "${conferences_years[@]}"; do
         conf_year=($conference)
         if [[ "${conf_year[1]}" == "$year" ]]; then
+            echo "Running doc2map for ${conf_year[0]} $year"
             $run_command python doc2map.py --year $year --conference ${conf_year[0]}
         fi
     done
 
+    echo "Running doc2map for $year"
     $run_command python doc2map.py --year $year
 fi
