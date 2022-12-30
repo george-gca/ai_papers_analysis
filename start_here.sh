@@ -4,12 +4,13 @@ if [[ $HOSTNAME != "docker-"* ]] && (hash poetry 2>/dev/null); then
     run_command="poetry run"
 fi
 
-# cluster_conferences=1
-# find_words_usage_over_conf=1
-# n_clusters=100
-# train_top2vec=1
+cluster_conferences=1
+find_words_usage_over_conf=1
+n_clusters=100
+# create_corpus=1
+train_top2vec=1
 # top2vec=1
-doc2map=1
+# doc2map=1
 year=2022
 
 searches=(
@@ -187,8 +188,13 @@ if [ -n "$find_words_usage_over_conf" ]; then
 fi
 
 if [ -n "$train_top2vec" ]; then
-    $run_command python top2vec_model.py -c -t --year $year
-    $run_command python top2vec_model.py -c -t --search ${searches[*]}
+    if [ -n "$create_corpus" ]; then
+        $run_command python top2vec_model.py -c -t --year $year
+        $run_command python top2vec_model.py -c -t --search ${searches[*]}
+    else
+        $run_command python top2vec_model.py -t --year $year
+        $run_command python top2vec_model.py -t --search ${searches[*]}
+    fi
 elif [ -n "$top2vec" ]; then
     $run_command python top2vec_model.py --year $year
     $run_command python top2vec_model.py --search ${searches[*]}
@@ -199,10 +205,18 @@ if [ -n "$doc2map" ]; then
         conf_year=($conference)
         if [[ "${conf_year[1]}" == "$year" ]]; then
             echo "Running doc2map for ${conf_year[0]} $year"
-            $run_command python doc2map.py --year $year --conference ${conf_year[0]}
+            if [ -n "$create_corpus" ]; then
+                $run_command python doc2map.py -c --year $year --conference ${conf_year[0]}
+            else
+                $run_command python doc2map.py --year $year --conference ${conf_year[0]}
+            fi
         fi
     done
 
     echo "Running doc2map for $year"
-    $run_command python doc2map.py --year $year
+    if [ -n "$create_corpus" ]; then
+        $run_command python doc2map.py -c --year $year
+    else
+        $run_command python doc2map.py --year $year
+    fi
 fi

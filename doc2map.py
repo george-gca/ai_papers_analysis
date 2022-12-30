@@ -49,9 +49,9 @@ def _train_doc2map_model(speed: str, conference: str, year: int) -> None:
 
     # You can also generate tree, to visualize in 3D the linkage of your documents
     # It will produce the visuals see in the story telling article about Doc2Map
-    d2m.display_tree(suffix=conf_year, out_dir=out_dir, display=False)
-    d2m.display_simplified_tree(suffix=conf_year, out_dir=out_dir, display=False)
-    d2m.scatter(suffix=conf_year, out_dir=out_dir, display=False)
+    # d2m.display_tree(suffix=conf_year, out_dir=out_dir, display=False)
+    # d2m.display_simplified_tree(suffix=conf_year, out_dir=out_dir, display=False)
+    # d2m.scatter(suffix=conf_year, out_dir=out_dir, display=False)
 
     # Generate the interactive map with manual zoom (the second example)
     # d2m.plotly_interactive_map(suffix=conf_year, out_dir=out_dir, display=False)
