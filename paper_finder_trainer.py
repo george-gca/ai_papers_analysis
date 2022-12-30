@@ -255,13 +255,6 @@ class PaperFinderTrainer(PaperFinder):
         self._save_object(self.model_dir / 'similar_dictionary', similar_dictionary)
 
     def clustering_papers(self, clusters: int = 10) -> None:
-        if self.paper_vectors.shape[0] < clusters * 10:
-            new_n_clusters = self.paper_vectors.shape[0] // 10
-            self.logger.warning(
-                f'Number of papers ({self.paper_vectors.shape[0]}) is less than 10 times the number of clusters ({clusters}).'
-                f' Setting number of clusters to {new_n_clusters}')
-            clusters = new_n_clusters
-
         estimator = KMeans(init='k-means++', n_clusters=clusters, n_init=10)
         estimator.fit(self.paper_vectors)
         self.paper_cluster_ids = estimator.labels_

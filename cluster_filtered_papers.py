@@ -115,9 +115,17 @@ def filter_and_cluster_papers(args: argparse.Namespace):
 
     _logger.print(
         '\nStep 2: Reduce dimensions and then apply k-means clustering.')
-    p2v.reduce_paper_vectors_dim(
-        args.paper_dim, perplexity=args.perplexity)
-    p2v.clustering_papers(clusters=args.clusters)
+    p2v.reduce_paper_vectors_dim(args.paper_dim, perplexity=args.perplexity)
+
+    if p2v.paper_vectors.shape[0] < args.clusters * 10:
+        clusters = p2v.paper_vectors.shape[0] // 10
+        _logger.warning(
+            f'Number of papers ({p2v.paper_vectors.shape[0]}) is less than 10 times the number of clusters ({args.clusters}).'
+            f' Setting number of clusters to {clusters}')
+    else:
+        clusters = args.clusters
+
+    p2v.clustering_papers(clusters=clusters)
 
     # log conference paper vectors clusterized to comet ml
     paper_titles = [['Title', 'Conference', 'Year', 'Cluster', 'PDF']]
@@ -127,7 +135,7 @@ def filter_and_cluster_papers(args: argparse.Namespace):
                              title=f'clusters_{name}',
                              template_filename=f'clusters_{name}')
 
-    for i in range(args.clusters):
+    for i in range(clusters):
         cluster_keywords = p2v.cluster_abstract_freq[i]
         cluster_keywords = [
             p2v.abstract_words[w] for w, _ in cluster_keywords if w not in not_informative_words][:n_keywords]
