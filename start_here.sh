@@ -156,8 +156,8 @@ if [ -n "$cluster_conferences" ]; then
 
     echo -e "\nClustering search results"
     for search in "${searches[@]}"; do
-    	$run_command python cluster_filtered_papers.py "$search" -l info --name "$search" --clusters 10 -p 3 --suffix _50000w_150_clusters_pwc -y $year
-    	$run_command python cluster_filtered_papers.py "$search" -l info --name "$search" --clusters 30 -p 3 --suffix _50000w_150_clusters_pwc
+    	$run_command python cluster_filtered_papers.py "$search" -l info --clusters 10 -p 3 --suffix _50000w_150_clusters_pwc -y $year
+    	$run_command python cluster_filtered_papers.py "$search" -l info --clusters 30 -p 3 --suffix _50000w_150_clusters_pwc
     done
 fi
 
