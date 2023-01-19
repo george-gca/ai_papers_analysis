@@ -11,7 +11,6 @@ from typing import Dict, List, Set, Tuple
 import comet_ml
 import numpy as np
 import pandas as pd
-from colorama import Fore
 from prettytable import PrettyTable
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
@@ -318,15 +317,26 @@ def _print_papers_with_words(new_words_usage: List[Tuple[str, int]], paper_finde
     _logger.print(f'\nFinding papers that uses the new words\n')
     not_found_keywords = set()
 
-    for keyword in keywords:
-        results, _ = paper_finder.find_by_keywords(tuple(keyword), -1, similars=0, conference=conference, year=year)
+    # write this data to a file
+    output_dir = Path('words_usage/')
+    output_dir.mkdir(exist_ok=True)
 
-        if len(results) > 0:
-            _logger.print(f'\nPapers that use the word: {keyword}')
-            for paper_id, _ in results:
-                _logger.print(f'\t{paper_finder.papers[paper_id].title}')
-        else:
-            not_found_keywords.add(keyword)
+    with open(output_dir / f'{conference}_{year}_papers_with_new_words.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Word', 'Titles'])
+
+        for keyword in keywords:
+            results, _ = paper_finder.find_by_keywords(tuple(keyword), -1, similars=0, conference=conference, year=year)
+
+            if len(results) > 0:
+                _logger.print(f'\nPapers that use the word: {keyword}')
+                writer.writerow([keyword, '\n'.join([paper_finder.papers[paper_id].title for paper_id, _ in results])])
+
+                for paper_id, _ in results:
+                    _logger.print(f'\t{paper_finder.papers[paper_id].title}')
+
+            else:
+                not_found_keywords.add(keyword)
 
     _logger.print(f'\nNo papers found for words:\n{", ".join(sorted(not_found_keywords))}.')
 
