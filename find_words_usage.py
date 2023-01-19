@@ -6,12 +6,12 @@ import multiprocessing
 import logging
 from collections import Counter
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple
 
 import comet_ml
 import numpy as np
 import pandas as pd
-from prettytable import PrettyTable
+from prettytable import MARKDOWN, PrettyTable
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
 from tqdm import tqdm
@@ -273,6 +273,8 @@ def _print_most_used_new_words(new_words_usage: List[Tuple[str, int]], paper_fin
     table.field_names = ['Word', 'Related new word', 'Occurrences', 'Related words']
 
     i = 0
+    max_words_per_line = 5
+
     while i < len(new_words_usage):
         word, count = new_words_usage[i]
         # discard new words with little usage
@@ -293,18 +295,38 @@ def _print_most_used_new_words(new_words_usage: List[Tuple[str, int]], paper_fin
             else:
                 j += 1
 
-        similar_words = ', '.join(similar_words)
-        table.add_row([word, '', count, similar_words])
+        if len(similar_words) <= max_words_per_line:
+            similar_words = ', '.join(similar_words)
+            table.add_row([word, '', count, similar_words])
+        else:
+            for k in range(max_words_per_line, len(similar_words), max_words_per_line):
+                similar_words_group = ', '.join(similar_words[k:k+max_words_per_line])
+
+                if k == max_words_per_line:
+                    table.add_row([word, '', count, similar_words_group])
+                else:
+                    table.add_row(['', '', '', similar_words_group])
 
         if len(new_similar_words) > 0:
             for new_word, new_count in new_similar_words:
                 similar_words = paper_finder.get_most_similar_words(new_word, n_similar_words)
                 similar_words = [w for _, w in similar_words]
-                similar_words = ', '.join(similar_words)
-                table.add_row(['', new_word, new_count, similar_words])
+
+                if len(similar_words) <= max_words_per_line:
+                    similar_words = ', '.join(similar_words)
+                    table.add_row(['', new_word, new_count, similar_words])
+                else:
+                    for k in range(max_words_per_line, len(similar_words), max_words_per_line):
+                        similar_words_group = ', '.join(similar_words[k:k+max_words_per_line])
+
+                        if k == max_words_per_line:
+                            table.add_row(['', new_word, new_count, similar_words_group])
+                        else:
+                            table.add_row(['', '', '', similar_words_group])
 
         i += 1
 
+    table.set_style(MARKDOWN)
     _logger.print(f'\nMost used new words:\n\n{table}\n')
 
 
@@ -339,6 +361,14 @@ def _print_papers_with_words(new_words_usage: List[Tuple[str, int]], paper_finde
                 not_found_keywords.add(keyword)
 
     _logger.print(f'\nNo papers found for words:\n{", ".join(sorted(not_found_keywords))}.')
+
+
+def _sort_rows(rows: List[Any]) -> List[Any]:
+    top_rows = [r for r in rows if r[2] == '↑']
+    bottom_rows = [r for r in rows if r[2] == '↓']
+
+    new_rows = sorted(top_rows, key=lambda x: x[0], reverse=True) + sorted(bottom_rows, key=lambda x: x[0])
+    return [r[1:] for r in new_rows]
 
 
 if __name__ == '__main__':
@@ -428,13 +458,15 @@ if __name__ == '__main__':
 
         _logger.print(f'Words that had variation in amount of papers that use it (no matter how many times) bigger than {variation_of_word*100}%:\n')
         table = PrettyTable()
-        table.field_names = ['Word', 'Variation', f'Occurrences in {conferences[c1]}', f'Occurrences in {conferences[c2]}']
+        table.field_names = ['Word', 'Variation', f'Occurrences in {conferences[c1]}', '%', f'Occurrences in {conferences[c2]}', '%']
+        rows = []
 
         for word in same_words:
             papers_in_c1 = papers_with_word_dict[c1][word] / n_papers[c1]
             papers_in_c2 = papers_with_word_dict[c2][word] / n_papers[c2]
+            variation = abs(papers_in_c2 - papers_in_c1)
 
-            if abs(papers_in_c2 - papers_in_c1) > variation_of_word:
+            if variation > variation_of_word:
                 if papers_in_c2 > papers_in_c1:
                     words_usage_increased.append(word)
                     symbol = '↑'
@@ -442,10 +474,15 @@ if __name__ == '__main__':
                     words_usage_decreased.append(word)
                     symbol = '↓'
 
-                table.add_row([word, symbol,
-                               f'{papers_with_word_dict[c1][word]:n}({papers_in_c1*100:.2f}%)',
-                               f'{papers_with_word_dict[c2][word]:n}({papers_in_c2*100:.2f}%)'])
+                rows.append([variation, word, symbol,
+                               papers_with_word_dict[c1][word],
+                               f'{papers_in_c1*100:.2f}',
+                               papers_with_word_dict[c2][word],
+                               f'{papers_in_c2*100:.2f}'])
 
+        rows = _sort_rows(rows)
+        table.add_rows(rows)
+        table.set_style(MARKDOWN)
         _logger.print(table)
 
         # print groups of words that increased papers using it
@@ -491,13 +528,15 @@ if __name__ == '__main__':
 
         _logger.print(f'\nWords that had variation in usage bigger than {variation_in_all_words*100}%:\n')
         table = PrettyTable()
-        table.field_names = ['Word', 'Variation', f'Occurrences in {conferences[c1]}', f'Occurrences in {conferences[c2]}']
+        table.field_names = ['Word', 'Variation', f'Occurrences in {conferences[c1]}', '%', f'Occurrences in {conferences[c2]}', '%']
+        rows = []
 
         for word in same_words:
             words_in_c1 = occurence_of_words_dict[c1][word] / n_papers[c1]
             words_in_c2 = occurence_of_words_dict[c2][word] / n_papers[c2]
+            variation = abs(words_in_c2 - words_in_c1)
 
-            if abs(words_in_c2 - words_in_c1) > variation_in_all_words and word not in IGNORE_SET:
+            if variation > variation_in_all_words and word not in IGNORE_SET:
                 if words_in_c2 > words_in_c1:
                     words_usage_increased.append(word)
                     symbol = '↑'
@@ -505,10 +544,15 @@ if __name__ == '__main__':
                     words_usage_decreased.append(word)
                     symbol = '↓'
 
-                table.add_row([word, symbol,
-                                 f'{occurence_of_words_dict[c1][word]:n}({words_in_c1*100:.2f}%)',
-                                 f'{occurence_of_words_dict[c2][word]:n}({words_in_c2*100:.2f}%)'])
+                rows.append([variation, word, symbol,
+                                 occurence_of_words_dict[c1][word],
+                                 f'{words_in_c1*100:.2f}',
+                                 occurence_of_words_dict[c2][word],
+                                 f'{words_in_c2*100:.2f}'])
 
+        rows = _sort_rows(rows)
+        table.add_rows(rows)
+        table.set_style(MARKDOWN)
         _logger.print(table)
 
         # print groups of words that usage increased
