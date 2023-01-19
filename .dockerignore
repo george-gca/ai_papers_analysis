@@ -1,6 +1,7 @@
 .git/
 data/
 model_data/
+.cometml-runs/
 *.tar
 *.log
 *.txt
