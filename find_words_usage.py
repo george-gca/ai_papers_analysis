@@ -1,4 +1,5 @@
 import argparse
+import csv
 from itertools import islice, pairwise
 import locale
 import multiprocessing
@@ -165,6 +166,27 @@ def _create_conferences_stats(conferences: List[str],
         papers_with_word_dict.append({k: v for k, v in papers_w_words})
         unique_words.append(unique_words_in_conference)
         n_papers.append(len(df))
+
+    # write this data to a file
+    conference = conferences[0].split('/')[0]
+    output_dir = Path('words_usage/')
+    output_dir.mkdir(exist_ok=True)
+
+    with open(output_dir / f'{conference}_occurences_of_words.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Word', 'Count', 'Year'])
+
+        for i, occurrences in enumerate(occurence_of_words_dict):
+            for word, count in occurrences.items():
+                writer.writerow([word, count, conferences[i].split('/')[1]])
+
+    with open(output_dir / f'{conference}_papers_with_word.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Word', 'Count', 'Year'])
+
+        for i, papers_w_words in enumerate(papers_with_word_dict):
+            for word, count in papers_w_words.items():
+                writer.writerow([word, count, conferences[i].split('/')[1]])
 
     return occurence_of_words_dict, papers_with_word_dict, unique_words, n_papers
 
