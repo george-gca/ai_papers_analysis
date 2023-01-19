@@ -371,13 +371,13 @@ if __name__ == '__main__':
         _print_papers_with_words(new_words_usage, p2v, conference, year)
         _filter_and_cluster_papers(new_words_usage, p2v, conference, year, experiment, args)
 
-        variations_text = []
         words_usage_decreased = []
         words_usage_increased = []
         same_words = {w for w in unique_words[c2].intersection(unique_words[c1]) if w not in IGNORE_SET}
-        longest_word = max((len(w) for w in same_words))
 
-        _logger.print(f'Words that had variation in amount of papers that use it (no matter how many times) bigger than {variation_of_word*100}%:')
+        _logger.print(f'Words that had variation in amount of papers that use it (no matter how many times) bigger than {variation_of_word*100}%:\n')
+        table = PrettyTable()
+        table.field_names = ['Word', 'Variation', f'Occurrences in {conferences[c1]}', f'Occurrences in {conferences[c2]}']
 
         for word in same_words:
             papers_in_c1 = papers_with_word_dict[c1][word] / n_papers[c1]
@@ -385,22 +385,20 @@ if __name__ == '__main__':
 
             if abs(papers_in_c2 - papers_in_c1) > variation_of_word:
                 if papers_in_c2 > papers_in_c1:
-                    variation = f'\t{Fore.GREEN}↑ {word:<{longest_word}}\t'
                     words_usage_increased.append(word)
+                    symbol = '↑'
                 else:
-                    variation = f'\t{Fore.YELLOW}↓ {word:<{longest_word}}\t'
                     words_usage_decreased.append(word)
+                    symbol = '↓'
 
-                variation += f'{papers_with_word_dict[c1][word]:n}({papers_in_c1*100:.2f}%)\t→\t' \
-                             f'{papers_with_word_dict[c2][word]:n}({papers_in_c2*100:.2f}%).{Fore.RESET}'
+                table.add_row([word, symbol,
+                               f'{papers_with_word_dict[c1][word]:n}({papers_in_c1*100:.2f}%)',
+                               f'{papers_with_word_dict[c2][word]:n}({papers_in_c2*100:.2f}%)'])
 
-                variations_text.append(variation)
-
-        for text in sorted(variations_text):
-            _logger.print(text)
+        _logger.print(table)
 
         # print groups of words that increased papers using it
-        _logger.print('')
+        _logger.print(f'\nGroup of words that increased papers using it:\n')
         i = 0
 
         while i < len(words_usage_increased):
@@ -411,7 +409,7 @@ if __name__ == '__main__':
 
             if len(similar_words_group) > 0:
                 similar_words_group = [word] + similar_words_group
-                _logger.print(f'Group of words that increased papers using it: {similar_words_group}')
+                _logger.print(', '.join(similar_words_group))
 
                 for w in similar_words_group[i+1:]:
                     words_usage_increased.remove(w)
@@ -419,7 +417,7 @@ if __name__ == '__main__':
             i += 1
 
         # print groups of words that decreased papers using it
-        _logger.print('')
+        _logger.print(f'\nGroup of words that decreased papers using it:\n')
         i = 0
 
         while i < len(words_usage_decreased):
@@ -430,17 +428,19 @@ if __name__ == '__main__':
 
             if len(similar_words_group) > 0:
                 similar_words_group = [word] + similar_words_group
-                _logger.print(f'Group of words that decreased papers using it: {similar_words_group}')
+                _logger.print(', '.join(similar_words_group))
 
                 for w in similar_words_group[i+1:]:
                     words_usage_decreased.remove(w)
 
             i += 1
 
-        _logger.print(f'\nWords that had variation in usage bigger than {variation_in_all_words*100}%:')
-        variations_text = []
         words_usage_decreased = []
         words_usage_increased = []
+
+        _logger.print(f'\nWords that had variation in usage bigger than {variation_in_all_words*100}%:\n')
+        table = PrettyTable()
+        table.field_names = ['Word', 'Variation', f'Occurrences in {conferences[c1]}', f'Occurrences in {conferences[c2]}']
 
         for word in same_words:
             words_in_c1 = occurence_of_words_dict[c1][word] / n_papers[c1]
@@ -448,22 +448,20 @@ if __name__ == '__main__':
 
             if abs(words_in_c2 - words_in_c1) > variation_in_all_words and word not in IGNORE_SET:
                 if words_in_c2 > words_in_c1:
-                    variation = f'\t{Fore.GREEN}↑ {word:<{longest_word}}\t'
                     words_usage_increased.append(word)
+                    symbol = '↑'
                 else:
-                    variation = f'\t{Fore.YELLOW}↓ {word:<{longest_word}}\t'
                     words_usage_decreased.append(word)
+                    symbol = '↓'
 
-                variation += f'{occurence_of_words_dict[c1][word]:n}({words_in_c1*100:.2f}%)\t→\t' \
-                             f'{occurence_of_words_dict[c2][word]:n}({words_in_c2*100:.2f}%).{Fore.RESET}'
+                table.add_row([word, symbol,
+                                 f'{occurence_of_words_dict[c1][word]:n}({words_in_c1*100:.2f}%)',
+                                 f'{occurence_of_words_dict[c2][word]:n}({words_in_c2*100:.2f}%)'])
 
-                variations_text.append(variation)
-
-        for text in sorted(variations_text):
-            _logger.print(text)
+        _logger.print(table)
 
         # print groups of words that usage increased
-        _logger.print('')
+        _logger.print(f'\nGroup of words that usage increased:\n')
         i = 0
 
         while i < len(words_usage_increased):
@@ -474,7 +472,7 @@ if __name__ == '__main__':
 
             if len(similar_words_group) > 0:
                 similar_words_group = [word] + similar_words_group
-                _logger.print(f'Group of words that increased usage: {similar_words_group}')
+                _logger.print(', '.join(similar_words_group))
 
                 for w in similar_words_group[i+1:]:
                     words_usage_increased.remove(w)
@@ -482,7 +480,7 @@ if __name__ == '__main__':
             i += 1
 
         # print groups of words that usage decreased
-        _logger.print('')
+        _logger.print(f'\nGroup of words that usage decreased:\n')
         i = 0
 
         while i < len(words_usage_decreased):
@@ -493,7 +491,7 @@ if __name__ == '__main__':
 
             if len(similar_words_group) > 0:
                 similar_words_group = [word] + similar_words_group
-                _logger.print(f'Group of words that decreased usage: {similar_words_group}')
+                _logger.print(', '.join(similar_words_group))
 
                 for w in similar_words_group[i+1:]:
                     words_usage_decreased.remove(w)
