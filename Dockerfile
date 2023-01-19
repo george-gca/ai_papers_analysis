@@ -52,6 +52,7 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
         ipython \
         numpy \
         pandas \
+        prettytable \
         pyarrow \
         scikit-learn \
         top2vec \

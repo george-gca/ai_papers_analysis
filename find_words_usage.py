@@ -11,6 +11,7 @@ import comet_ml
 import numpy as np
 import pandas as pd
 from colorama import Fore
+from prettytable import PrettyTable
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
 from tqdm import tqdm
@@ -227,10 +228,9 @@ def _print_most_used_new_words(new_words_usage: List[Tuple[str, int]], paper_fin
                                experiment: comet_ml.Experiment) -> None:
     _cluster_new_words(new_words_usage, paper_finder, conference, year, experiment)
 
-    # gets the max length of new word (for pretty printing)
-    longest_word = max((len(w) for w, _ in new_words_usage))
-    most_used_new_words = []
     new_words_usage = new_words_usage.copy()
+    table = PrettyTable()
+    table.field_names = ['Word', 'Related new word', 'Occurrences', 'Related words']
 
     i = 0
     while i < len(new_words_usage):
@@ -254,21 +254,18 @@ def _print_most_used_new_words(new_words_usage: List[Tuple[str, int]], paper_fin
                 j += 1
 
         similar_words = ', '.join(similar_words)
-        most_used_new_words.append(f'{word:<{longest_word}}: {count:03} - Related words: {similar_words}')
+        table.add_row([word, '', count, similar_words])
 
         if len(new_similar_words) > 0:
-            most_used_new_words.append(f'\tRelated to {word}')
-
             for new_word, new_count in new_similar_words:
                 similar_words = paper_finder.get_most_similar_words(new_word, n_similar_words)
                 similar_words = [w for _, w in similar_words]
-                most_used_new_words.append(f'\t{new_word:<{longest_word}}: {new_count:03}')
+                similar_words = ', '.join(similar_words)
+                table.add_row(['', new_word, new_count, similar_words])
 
         i += 1
 
-    most_used_new_words = '\n\t'.join(most_used_new_words)
-    _logger.print(
-        f'\nMost used new words:\n\t{most_used_new_words}\n')
+    _logger.print(f'\nMost used new words:\n\n{table}\n')
 
 
 def _print_papers_with_words(new_words_usage: List[Tuple[str, int]], paper_finder: PaperFinderTrainer,
@@ -277,18 +274,20 @@ def _print_papers_with_words(new_words_usage: List[Tuple[str, int]], paper_finde
     # filter new words that occurs less than 5 times
     keywords = [w for w, c in new_words_usage if c >= 5]
 
-    _logger.print(f'\nFinding papers that uses the new words:\n\t{"\n\t".join(keywords)}')
+    _logger.print(f'\nFinding papers that uses the new words\n')
+    not_found_keywords = set()
 
     for keyword in keywords:
         results, _ = paper_finder.find_by_keywords(tuple(keyword), -1, similars=0, conference=conference, year=year)
 
-        if len(results) == 0:
-            _logger.print('\nNo papers found for word: {keyword}.')
-            continue
+        if len(results) > 0:
+            _logger.print(f'\nPapers that use the word: {keyword}')
+            for paper_id, _ in results:
+                _logger.print(f'\t{paper_finder.papers[paper_id].title}')
+        else:
+            not_found_keywords.add(keyword)
 
-        _logger.print('\nPapers that use the word: {keyword}')
-        for paper_id, _ in results:
-            _logger.print(f'\t{paper_finder.papers[paper_id].title}')
+    _logger.print(f'\nNo papers found for words:\n{", ".join(sorted(not_found_keywords))}.')
 
 
 if __name__ == '__main__':
@@ -346,7 +345,7 @@ if __name__ == '__main__':
     # p2v.load_abstracts(data_dir / 'abstracts_clean_pwc.feather')
 
     # create sequences of conferences (e.g. (cvpr/2019, cvpr/2020), (cvpr/2020, cvpr/2021))
-    sequences = pairwise(conferences)
+    sequences = pairwise(range(len(conferences)))
     new_words = []
     # percentage of how many times the word was used to consider it a relevant change
     variation_in_all_words = 0.05
