@@ -270,7 +270,7 @@ def _print_most_used_new_words(new_words_usage: List[Tuple[str, int]], paper_fin
             writer.writerow([word, count, paper_finder.get_most_similar_words(word, n_similar_words)])
 
     table = PrettyTable()
-    table.field_names = ['Word', 'Related new word', 'Occurrences', 'Related words']
+    table.field_names = ['Word', 'Related new word', '# Occurrences', 'Related words']
 
     i = 0
     max_words_per_line = 5
@@ -458,7 +458,8 @@ if __name__ == '__main__':
 
         _logger.print(f'Words that had variation in amount of papers that use it (no matter how many times) bigger than {variation_of_word*100}%:\n')
         table = PrettyTable()
-        table.field_names = ['Word', 'Variation', f'Occurrences in {conferences[c1]}', '%', f'Occurrences in {conferences[c2]}', '%']
+        table.field_names = ['Word', 'Variation', f'# occurrences in {conferences[c1].split("/")[1]}', f'% occurrences in {conferences[c1].split("/")[1]}',
+                                                  f'# occurrences in {conferences[c2].split("/")[1]}', f'% occurrences in {conferences[c2].split("/")[1]}']
         rows = []
 
         for word in same_words:
@@ -528,7 +529,8 @@ if __name__ == '__main__':
 
         _logger.print(f'\nWords that had variation in usage bigger than {variation_in_all_words*100}%:\n')
         table = PrettyTable()
-        table.field_names = ['Word', 'Variation', f'Occurrences in {conferences[c1]}', '%', f'Occurrences in {conferences[c2]}', '%']
+        table.field_names = ['Word', 'Variation', f'# occurrences in {conferences[c1].split("/")[1]}', f'% occurrences in {conferences[c1].split("/")[1]}',
+                                                  f'# occurrences in {conferences[c2].split("/")[1]}', f'% occurrences in {conferences[c2].split("/")[1]}']
         rows = []
 
         for word in same_words:
