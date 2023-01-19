@@ -1,3 +1,4 @@
+from itertools import takewhile
 import locale
 import logging
 import math
@@ -57,9 +58,8 @@ class PaperFinderTrainer(PaperFinder):
 
     def _create_ngrams_count(self, word_list: List[str], n: int, top_n: int) -> List[Tuple[List[str], int]]:
         with Timer(name=f'Creating {n}-grams'):
-            ngrams = [l for l in tqdm(zip(
-                *(word_list[i:] for i in range(n))), total=len(word_list)+1-n, unit='ngram', desc=f'Creating {n}-grams', ncols=TQDM_NCOLS) if not self.unk in l and not self.eop in l]
-            self.logger.info(f'\nCreated {len(ngrams):n} {n}-grams')
+            ngrams = (l for l in tqdm(zip(
+                *(word_list[i:] for i in range(n))), total=len(word_list)+1-n, unit='ngram', desc=f'Creating {n}-grams', ncols=TQDM_NCOLS) if not self.unk in l and not self.eop in l)
 
         with Timer(name=f'Counting {n}-grams'):
             result = Counter(ngrams).most_common(top_n)
@@ -77,9 +77,8 @@ class PaperFinderTrainer(PaperFinder):
             f'Checking which {n}-grams occurs more than {ngram_threshold:n} times '
             f'from the top {top_n:n} most frequent ones\n')
 
-        ngrams_counts = self._create_ngrams_count(
-            word_list, n, top_n)
-        ngrams_counts = [('_'.join(ngram), count) for ngram, count in ngrams_counts if count >= ngram_threshold]
+        ngrams_counts = self._create_ngrams_count(word_list, n, top_n)
+        ngrams_counts = [('_'.join(ngram), count) for ngram, count in takewhile(lambda x: x[1] >= ngram_threshold, ngrams_counts)]
 
         if len(ngrams_counts) == top_n:
             self.logger.info(f'The number of {n}-grams is larger than {top_n:n}. Checking for more')
@@ -87,9 +86,8 @@ class PaperFinderTrainer(PaperFinder):
                 # since number of most common n-grams is equal to top_n,
                 # double top_n size to check for more n-grams
                 top_n *= 2
-                ngrams_counts = self._create_ngrams_count(
-                    word_list, n, top_n)
-                ngrams_counts = [('_'.join(ngram), count) for ngram, count in ngrams_counts if count >= ngram_threshold]
+                ngrams_counts = self._create_ngrams_count(word_list, n, top_n)
+                ngrams_counts = [('_'.join(ngram), count) for ngram, count in takewhile(lambda x: x[1] >= ngram_threshold, ngrams_counts)]
 
         for ngram, count in ngrams_counts:
             self.logger.print(f'{ngram}: {count:n}')
@@ -212,11 +210,8 @@ class PaperFinderTrainer(PaperFinder):
             index = row.name
             title = row['clean_title']
 
-            self.paper_vectors[index] += self.model.get_sentence_vector(
-                title) * self.title_vector_weight
-
-            self.paper_vectors[index] += self.model.get_sentence_vector(
-                row['abstract'])
+            self.paper_vectors[index] += self.model.get_sentence_vector(title) * self.title_vector_weight
+            self.paper_vectors[index] += self.model.get_sentence_vector(row['abstract'])
 
             for word in title.split():
                 if word not in self.abstract_dict:
@@ -269,17 +264,14 @@ class PaperFinderTrainer(PaperFinder):
         self.cluster_abstract_freq = []
 
         for i in tqdm(range(clusters), desc='Generating clusters of frequent words', ncols=TQDM_NCOLS):
-            cluster_papers_index = [j for j in range(
-                self.n_papers) if self.paper_cluster_ids[j] == i]
+            cluster_papers_index = [j for j in range(self.n_papers) if self.paper_cluster_ids[j] == i]
 
-            counter = Counter(
-                self.papers[cluster_papers_index[0]].abstract_freq)
+            counter = Counter(self.papers[cluster_papers_index[0]].abstract_freq)
             for j in cluster_papers_index[1:]:
                 counter += Counter(self.papers[j].abstract_freq)
 
             abstract = dict(counter)
-            self.cluster_abstract_freq.append(
-                sorted(abstract.items(), key=lambda x: x[1], reverse=True))
+            self.cluster_abstract_freq.append(sorted(abstract.items(), key=lambda x: x[1], reverse=True))
 
     def convert_text_with_phrases(self, src_file: Path, dest_file: Path, column: str = 'abstract') -> None:
         if 'csv' in src_file.suffix:
@@ -309,13 +301,16 @@ class PaperFinderTrainer(PaperFinder):
         ngrams_set = self._create_ngrams_set(self.words, n, ngram_threshold)
 
         if len(ngrams_set) > 0:
-            self.logger.info(
-                f'\nOnly {len(ngrams_set):n} {n}-grams occurs more than {ngram_threshold:n} times')
+            self.logger.info(f'\nOnly {len(ngrams_set):n} {n}-grams occurs more than {ngram_threshold:n} times')
 
             chunk_size = 500_000 // n # words
             new_words = []
 
-            with tqdm(total=math.ceil(len(self.words) / chunk_size) * len(ngrams_set), unit='chunk', desc=f'Replacing words by frequent {n}-grams', ncols=TQDM_NCOLS) as pbar:
+            with tqdm(total=math.ceil(len(self.words) / chunk_size) * len(ngrams_set),
+                      unit='chunk',
+                      desc=f'Replacing words by frequent {n}-grams',
+                      ncols=TQDM_NCOLS) as pbar:
+
                 for chunk in _chunks(self.words, chunk_size):
                     words = f' {" ".join(chunk)} '
                     for ngram in ngrams_set:
@@ -334,8 +329,7 @@ class PaperFinderTrainer(PaperFinder):
             self.build_dictionary(rebuild=True)
 
         else:
-            self.logger.info(
-                f'No {n}-grams occurs more than {ngram_threshold} times')
+            self.logger.info(f'No {n}-grams occurs more than {ngram_threshold} times')
 
     def get_most_similar_words(self, target_word: str, count: int = 5) -> List[Tuple[float, str]]:
         return self.model.get_nearest_neighbors(target_word, k=count)
