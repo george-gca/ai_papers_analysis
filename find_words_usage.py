@@ -188,6 +188,13 @@ def _create_conferences_stats(conferences: List[str],
             for word, count in papers_w_words.items():
                 writer.writerow([word, count, conferences[i].split('/')[1]])
 
+    with open(output_dir / f'{conference}_papers_per_year.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Count', 'Year'])
+
+        for i, papers in enumerate(n_papers):
+            writer.writerow([papers, conferences[i].split('/')[1]])
+
     return occurence_of_words_dict, papers_with_word_dict, unique_words, n_papers
 
 
