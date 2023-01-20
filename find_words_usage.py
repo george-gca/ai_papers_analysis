@@ -252,10 +252,7 @@ def _filter_and_cluster_papers(new_words_usage: List[Tuple[str, int]], paper_fin
 
 
 def _print_most_used_new_words(new_words_usage: List[Tuple[str, int]], paper_finder: PaperFinderTrainer,
-                               n_similar_words: int, conference: str, year: int,
-                               experiment: comet_ml.Experiment) -> None:
-    # _cluster_new_words(new_words_usage, paper_finder, conference, year, experiment)
-
+                               n_similar_words: int, conference: str, year: int) -> None:
     new_words_usage = new_words_usage.copy()
 
     # write this data to a file
@@ -267,7 +264,9 @@ def _print_most_used_new_words(new_words_usage: List[Tuple[str, int]], paper_fin
         writer.writerow(['Word', 'Count', 'Related words and weights'])
 
         for word, count in new_words_usage:
-            writer.writerow([word, count, paper_finder.get_most_similar_words(word, n_similar_words)])
+            similar_words = paper_finder.get_most_similar_words(word, n_similar_words)
+            similar_words = [f'{w} - {s:.3f}' for s, w in similar_words]
+            writer.writerow([word, count, ', '.join(similar_words)])
 
     table = PrettyTable()
     table.field_names = ['Word', 'Related new word', '# Occurrences', 'Related words']
@@ -448,7 +447,8 @@ if __name__ == '__main__':
         new_words_usage = [(k, v) for k, v in sorted(new_words_usage.items(), key=lambda item: item[1], reverse=True)]
 
         # TODO give the possibility to search which papers used the given word
-        _print_most_used_new_words(new_words_usage, p2v, n_similar_words, conference, year, experiment)
+        # _cluster_new_words(new_words_usage, p2v, conference, year, experiment)
+        _print_most_used_new_words(new_words_usage, p2v, n_similar_words, conference, year)
         _print_papers_with_words(new_words_usage, p2v, conference, year)
         # _filter_and_cluster_papers(new_words_usage, p2v, conference, year, experiment, args)
 
