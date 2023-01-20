@@ -261,12 +261,12 @@ def _print_most_used_new_words(new_words_usage: List[Tuple[str, int]], paper_fin
 
     with open(output_dir / f'{conference}_{year}_new_words.csv', 'w') as f:
         writer = csv.writer(f)
-        writer.writerow(['Word', 'Count', 'Related words and weights'])
+        writer.writerow(['Word', 'Count', 'Related words', 'Words Weights'])
 
         for word, count in new_words_usage:
             similar_words = paper_finder.get_most_similar_words(word, n_similar_words)
-            similar_words = [f'{w} - {s:.3f}' for s, w in similar_words]
-            writer.writerow([word, count, ', '.join(similar_words)])
+            weights, words = zip(*similar_words)
+            writer.writerow([word, count, ', '.join(words), ' '.join([str(w) for w in weights])])
 
     table = PrettyTable()
     table.field_names = ['Word', 'Related new word', '# Occurrences', 'Related words']
