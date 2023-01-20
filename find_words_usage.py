@@ -299,7 +299,7 @@ def _print_most_used_new_words(new_words_usage: List[Tuple[str, int]], paper_fin
             similar_words = ', '.join(similar_words)
             table.add_row([word, '', count, similar_words])
         else:
-            for k in range(max_words_per_line, len(similar_words), max_words_per_line):
+            for k in range(0, len(similar_words), max_words_per_line):
                 similar_words_group = ', '.join(similar_words[k:k+max_words_per_line])
 
                 if k == max_words_per_line:
@@ -316,7 +316,7 @@ def _print_most_used_new_words(new_words_usage: List[Tuple[str, int]], paper_fin
                     similar_words = ', '.join(similar_words)
                     table.add_row(['', new_word, new_count, similar_words])
                 else:
-                    for k in range(max_words_per_line, len(similar_words), max_words_per_line):
+                    for k in range(0, len(similar_words), max_words_per_line):
                         similar_words_group = ', '.join(similar_words[k:k+max_words_per_line])
 
                         if k == max_words_per_line:
@@ -456,7 +456,7 @@ if __name__ == '__main__':
         words_usage_increased = []
         same_words = {w for w in unique_words[c2].intersection(unique_words[c1]) if w not in IGNORE_SET}
 
-        _logger.print(f'Words that had variation in amount of papers that use it (no matter how many times) bigger than {variation_of_word*100}%:\n')
+        _logger.print(f'\nWords that had variation in amount of papers that use it (no matter how many times) bigger than {variation_of_word*100}%:\n')
         table = PrettyTable()
         table.field_names = ['Word', 'Variation', f'# occurrences in {conferences[c1].split("/")[1]}', f'% occurrences in {conferences[c1].split("/")[1]}',
                                                   f'# occurrences in {conferences[c2].split("/")[1]}', f'% occurrences in {conferences[c2].split("/")[1]}']
