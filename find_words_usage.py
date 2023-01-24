@@ -130,15 +130,15 @@ def _create_conferences_stats(conferences: List[str],
         abstract_files: List of abstract files.
 
     Returns:
-        occurence_of_words_dict: List of dictionaries with the number of
-            occurences of each word in each conference.
+        occurrence_of_words_dict: List of dictionaries with the number of
+            occurrences of each word in each conference.
         papers_with_word_dict: List of dictionaries with the number of papers
             that have each word in each conference.
         unique_words: List of sets with the unique words in each conference.
         n_papers: List of the number of papers in each conference.
     """
 
-    occurence_of_words_dict = []
+    occurrence_of_words_dict = []
     papers_with_word_dict = []
     unique_words = []
     n_papers = []
@@ -161,7 +161,7 @@ def _create_conferences_stats(conferences: List[str],
         occurrences = Counter(abstract_words).most_common()
         papers_w_words = Counter(abstract_unique_words).most_common()
 
-        occurence_of_words_dict.append({k: v for k, v in occurrences})
+        occurrence_of_words_dict.append({k: v for k, v in occurrences})
         papers_with_word_dict.append({k: v for k, v in papers_w_words})
         unique_words.append(unique_words_in_conference)
         n_papers.append(len(df))
@@ -171,11 +171,11 @@ def _create_conferences_stats(conferences: List[str],
     output_dir = Path('words_usage/')
     output_dir.mkdir(exist_ok=True)
 
-    with open(output_dir / f'{conference}_occurences_of_words.csv', 'w') as f:
+    with open(output_dir / f'{conference}_occurrences_of_words.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerow(['Word', 'Count', 'Year'])
 
-        for i, occurrences in enumerate(occurence_of_words_dict):
+        for i, occurrences in enumerate(occurrence_of_words_dict):
             for word, count in occurrences.items():
                 writer.writerow([word, count, conferences[i].split('/')[1]])
 
@@ -194,7 +194,7 @@ def _create_conferences_stats(conferences: List[str],
         for i, papers in enumerate(n_papers):
             writer.writerow([papers, conferences[i].split('/')[1]])
 
-    return occurence_of_words_dict, papers_with_word_dict, unique_words, n_papers
+    return occurrence_of_words_dict, papers_with_word_dict, unique_words, n_papers
 
 
 def _filter_and_cluster_papers(new_words_usage: List[Tuple[str, int]], paper_finder: PaperFinderTrainer,
@@ -261,7 +261,7 @@ def _print_most_used_new_words(new_words_usage: List[Tuple[str, int]], paper_fin
 
     with open(output_dir / f'{conference}_{year}_new_words.csv', 'w') as f:
         writer = csv.writer(f)
-        writer.writerow(['Word', 'Count', 'Related words', 'Words Weights'])
+        writer.writerow(['Word', 'Count', 'Related words', 'Words weights'])
 
         for word, count in new_words_usage:
             similar_words = paper_finder.get_most_similar_words(word, n_similar_words)
@@ -415,7 +415,7 @@ if __name__ == '__main__':
     experiment.log_parameters(args)
 
     # get data
-    occurence_of_words_dict, papers_with_word_dict, unique_words, n_papers = _create_conferences_stats(conferences, abstract_files)
+    occurrence_of_words_dict, papers_with_word_dict, unique_words, n_papers = _create_conferences_stats(conferences, abstract_files)
 
     # load embeddings model
     p2v = PaperFinderTrainer(data_dir=data_dir, model_dir=model_dir)
@@ -443,7 +443,7 @@ if __name__ == '__main__':
         year = int(year)
 
         # get the most used new words, most used first
-        new_words_usage = {w: occurence_of_words_dict[c2][w] for w in new_words_from}
+        new_words_usage = {w: occurrence_of_words_dict[c2][w] for w in new_words_from}
         new_words_usage = [(k, v) for k, v in sorted(new_words_usage.items(), key=lambda item: item[1], reverse=True)]
 
         # TODO give the possibility to search which papers used the given word
@@ -534,8 +534,8 @@ if __name__ == '__main__':
         rows = []
 
         for word in same_words:
-            words_in_c1 = occurence_of_words_dict[c1][word] / n_papers[c1]
-            words_in_c2 = occurence_of_words_dict[c2][word] / n_papers[c2]
+            words_in_c1 = occurrence_of_words_dict[c1][word] / n_papers[c1]
+            words_in_c2 = occurrence_of_words_dict[c2][word] / n_papers[c2]
             variation = abs(words_in_c2 - words_in_c1)
 
             if variation > variation_in_all_words and word not in IGNORE_SET:
@@ -547,9 +547,9 @@ if __name__ == '__main__':
                     symbol = '↓'
 
                 rows.append([variation, word, symbol,
-                                 occurence_of_words_dict[c1][word],
+                                 occurrence_of_words_dict[c1][word],
                                  f'{words_in_c1*100:.2f}',
-                                 occurence_of_words_dict[c2][word],
+                                 occurrence_of_words_dict[c2][word],
                                  f'{words_in_c2*100:.2f}'])
 
         rows = _sort_rows(rows)
