@@ -152,13 +152,15 @@ if __name__ == '__main__':
     log_dir.mkdir(exist_ok=True)
 
     if len(args.conference) > 0 and args.year > 0:
-        setup_log(args.log_level, log_dir / f'top2vec_{args.conference}_{args.year}.log')
+        suffix = f'_{args.conference}_{args.year}'
     elif len(args.conference) > 0:
-        setup_log(args.log_level, log_dir / f'top2vec_{args.conference}.log')
+        suffix = f'_{args.conference}'
     elif args.year > 0:
-        setup_log(args.log_level, log_dir / f'top2vec_{args.year}.log')
+        suffix = f'_{args.year}'
     else:
-        setup_log(args.log_level, log_dir / 'top2vec.log')
+        suffix = ''
+
+    setup_log(args.log_level, log_dir / f'top2vec{suffix}.log')
 
     if args.create_corpus:
         _create_corpus(args.separator, args.conference, args.year)
@@ -183,20 +185,47 @@ if __name__ == '__main__':
     topic_sizes, _ = model.get_topic_sizes()
     topic_words, word_scores, topic_nums = model.get_topics()
 
+    # store information about the topics
+    topics_data = []
+    topics_words = []
+    output_dir = Path('top2vec/').expanduser()
+    output_dir.mkdir(exist_ok=True)
+
     for topic_num, topic_size, words, scores in zip(topic_nums, topic_sizes, topic_words, word_scores):
         _logger.print(f'\nTopic {topic_num} has {topic_size} documents')
+        topics_data.append({'Topic': topic_num, 'Documents': topic_size})
+
         topic_word_scores = [f'{score:.3f} - {word}' for score, word in zip(scores, words)]
         topic_word_scores_str = '\n\t'.join(topic_word_scores)
         _logger.print(f'Most important words:\n\t{topic_word_scores_str}')
 
+        for score, word in zip(scores, words)
+            topics_words.append({'Word': word, 'Score': score, 'Topic': topic_num})
+
+    pd.DataFrame(topics_data).to_csv(output_dir / f'topics{suffix}.csv')
+    pd.DataFrame(topics_words).to_csv(output_dir / f'topics_words{suffix}.csv')
+
     for keyword in args.search:
         _logger.print(f'\nSearching for {args.n_topics} topics related to "{keyword}"')
+        topics_data = []
+        topics_words = []
+        search_suffix = f'{suffix}_{keyword}'
+
         try:
             topic_words, word_scores, topic_scores, topic_nums = model.search_topics(keywords=[keyword], num_topics=args.n_topics)
             for topic_num, topic_score, words, scores in zip(topic_nums, topic_scores, topic_words, word_scores):
                 _logger.print(f'\nTopic {topic_num} has score {topic_score:.3f}')
+                topics_data.append({'Topic': topic_num, 'Score': topic_score})
+
                 topic_word_scores = [f'{score:.3f} - {word}' for score, word in zip(scores, words)]
                 topic_word_scores_str = '\n\t'.join(topic_word_scores)
                 _logger.print(f'Most similar words:\n\t{topic_word_scores_str}')
+
+                for score, word in zip(scores, words)
+                    topics_words.append({'Word': word, 'Score': score, 'Topic': topic_num})
+
+        pd.DataFrame(topics_data).to_csv(output_dir / f'topics{search_suffix}.csv')
+        pd.DataFrame(topics_words).to_csv(output_dir / f'topics_words{search_suffix}.csv')
+
         except ValueError:
             _logger.print(f'\n"{keyword}" has not been learned by the model so it cannot be searched')
