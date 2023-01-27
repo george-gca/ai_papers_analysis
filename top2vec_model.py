@@ -224,8 +224,8 @@ if __name__ == '__main__':
                 for score, word in zip(scores, words):
                     topics_words.append({'Word': word, 'Score': score, 'Topic': topic_num})
 
-        pd.DataFrame(topics_data).to_csv(output_dir / f'topics{search_suffix}.csv')
-        pd.DataFrame(topics_words).to_csv(output_dir / f'topics_words{search_suffix}.csv')
+            pd.DataFrame(topics_data).to_csv(output_dir / f'topics{search_suffix}.csv')
+            pd.DataFrame(topics_words).to_csv(output_dir / f'topics_words{search_suffix}.csv')
 
         except ValueError:
             _logger.print(f'\n"{keyword}" has not been learned by the model so it cannot be searched')
