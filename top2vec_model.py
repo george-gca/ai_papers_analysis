@@ -199,7 +199,7 @@ if __name__ == '__main__':
         topic_word_scores_str = '\n\t'.join(topic_word_scores)
         _logger.print(f'Most important words:\n\t{topic_word_scores_str}')
 
-        for score, word in zip(scores, words)
+        for score, word in zip(scores, words):
             topics_words.append({'Word': word, 'Score': score, 'Topic': topic_num})
 
     pd.DataFrame(topics_data).to_csv(output_dir / f'topics{suffix}.csv')
@@ -221,7 +221,7 @@ if __name__ == '__main__':
                 topic_word_scores_str = '\n\t'.join(topic_word_scores)
                 _logger.print(f'Most similar words:\n\t{topic_word_scores_str}')
 
-                for score, word in zip(scores, words)
+                for score, word in zip(scores, words):
                     topics_words.append({'Word': word, 'Score': score, 'Topic': topic_num})
 
         pd.DataFrame(topics_data).to_csv(output_dir / f'topics{search_suffix}.csv')
