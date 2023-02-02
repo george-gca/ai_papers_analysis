@@ -406,8 +406,8 @@ if __name__ == '__main__':
     model_dir = Path(args.model_dir).expanduser()
     conferences = [c for c in supported_conferences if args.conference == c.split('/')[0]]
 
-    # abstract_files = [data_dir / c / f'abstracts_{args.max_ngram}gram.csv' for c in conferences]
-    abstract_files = [data_dir / c / 'abstracts_clean.csv' for c in conferences]
+    abstract_files = [data_dir / c / f'abstracts_{args.max_ngram}gram.csv' for c in conferences]
+    # abstract_files = [data_dir / c / 'abstracts_clean.csv' for c in conferences]
 
     # set up comet experiment
     experiment = comet_ml.Experiment(project_name='AI Papers', auto_metric_logging=False)
