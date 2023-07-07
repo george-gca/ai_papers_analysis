@@ -253,8 +253,14 @@ def _filter_and_cluster_papers(new_words_usage: List[Tuple[str, int]], paper_fin
         _logger.print(f'cluster {i+1:02d} keywords: {", ".join(cluster_keywords)}')
 
 
-def _print_most_used_new_words(new_words_usage: List[Tuple[str, int]], paper_finder: PaperFinderTrainer,
-                               n_similar_words: int, conference: str, year: int) -> None:
+def _print_most_used_new_words(
+        new_words_usage: List[Tuple[str, int]],
+        paper_finder: PaperFinderTrainer,
+        n_similar_words: int,
+        conference: str,
+        year: int,
+        experiment = comet_ml.Experiment,
+        ) -> None:
     new_words_usage = new_words_usage.copy()
 
     # write this data to a file
@@ -329,6 +335,7 @@ def _print_most_used_new_words(new_words_usage: List[Tuple[str, int]], paper_fin
 
     table.set_style(MARKDOWN)
     _logger.print(f'\nMost used new words:\n\n{table}\n')
+    experiment.log_table('Most used new words', tabular_data=table.get_formatted_string('csv'), headers=True)
 
 
 def _print_papers_with_words(new_words_usage: List[Tuple[str, int]], paper_finder: PaperFinderTrainer,
@@ -450,7 +457,7 @@ if __name__ == '__main__':
 
         # TODO give the possibility to search which papers used the given word
         # _cluster_new_words(new_words_usage, p2v, conference, year, experiment)
-        _print_most_used_new_words(new_words_usage, p2v, n_similar_words, conference, year)
+        _print_most_used_new_words(new_words_usage, p2v, n_similar_words, conference, year, experiment)
         _print_papers_with_words(new_words_usage, p2v, conference, year)
         # _filter_and_cluster_papers(new_words_usage, p2v, conference, year, experiment, args)
 
@@ -487,6 +494,11 @@ if __name__ == '__main__':
         table.add_rows(rows)
         table.set_style(MARKDOWN)
         _logger.print(f'\n{table}')
+        experiment.log_table(
+            f'Variation in # of papers using > {variation_of_word*100}%',
+            tabular_data=table.get_formatted_string('csv'),
+            headers=True,
+            )
 
         # print groups of words that increased papers using it
         _logger.print(f'\nGroup of words that increased papers using it:\n')
@@ -558,6 +570,11 @@ if __name__ == '__main__':
         table.add_rows(rows)
         table.set_style(MARKDOWN)
         _logger.print(f'\n{table}')
+        experiment.log_table(
+            f'Variation in usage > {variation_of_word*100}%',
+            tabular_data=table.get_formatted_string('csv'),
+            headers=True,
+            )
 
         # print groups of words that usage increased
         _logger.print(f'\nGroup of words that usage increased:\n')
