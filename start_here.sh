@@ -6,7 +6,6 @@ fi
 
 # cluster_conferences=1
 # find_words_usage_over_conf=1
-# n_clusters=100
 # train_top2vec=1
 top2vec=1
 
@@ -18,6 +17,7 @@ searches=(
       "continual_learning"
       "explainability"
       "explanatory_interactive_learning"
+      "gpt"
       "incremental_learning"
       "interactive_learning"
       "interpretability"
@@ -48,16 +48,16 @@ export OMP_NUM_THREADS=15
 
 if [ -n "$cluster_conferences" ]; then
     echo -e "\nClustering conferences' words"
-    $run_command python cluster_conference_words.py --clusters $n_clusters --word_dim 3 -l info
+    $run_command python cluster_conference_words.py -l info
 
     echo -e "\nClustering conferences' papers"
-    $run_command python cluster_conference_papers.py --clusters $n_clusters --paper_dim 3 -l info
+    $run_command python cluster_conference_papers.py -l info
 
     echo -e "\nClustering search results"
-    year=2022
     for search in "${searches[@]}"; do
-    	$run_command python cluster_filtered_papers.py "$search" -l info --name "$search" --clusters 10 -p 3 --suffix _50000w_150_clusters_pwc -y $year
-    	$run_command python cluster_filtered_papers.py "$search" -l info --name "$search" --clusters 30 -p 3 --suffix _50000w_150_clusters_pwc
+        $run_command python cluster_filtered_papers.py "$search" -l info --suffix _50000w_150_clusters_pwc -y 2023
+    	$run_command python cluster_filtered_papers.py "$search" -l info --suffix _50000w_150_clusters_pwc -y 2022
+    	$run_command python cluster_filtered_papers.py "$search" -l info --suffix _50000w_150_clusters_pwc
     done
 fi
 

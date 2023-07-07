@@ -151,7 +151,7 @@ if __name__ == '__main__':
     parser.add_argument('keywords', type=str, help='keywords for search')
     parser.add_argument('-c', '--conference', type=str, default='',
                         help='conference to scrape data')
-    parser.add_argument('--clusters', type=int, default=26,
+    parser.add_argument('--clusters', type=int, default=18,
                         help='number of clusters to be divided')
     parser.add_argument('--count', default=-1, type=int,
                         help='max number of papers to find')
@@ -172,7 +172,7 @@ if __name__ == '__main__':
                         help='name to be used for experiment')
     parser.add_argument('-n', '--max_ngram', type=int, default=5,
                         help='max n-gram of words to use')
-    parser.add_argument('-p', '--paper_dim', type=int, default=3,
+    parser.add_argument('-p', '--paper_dim', type=int, default=5,
                         help='dimensions for paper representation')
     parser.add_argument('-s', '--similars', type=int, default=3,
                         help='number of related words to each of the keywords to include in search')

@@ -31,7 +31,7 @@ if __name__ == '__main__':
         description="Find word usage.")
     parser.add_argument('-c', '--conference', type=str, default='',
                         help='conference to scrape data')
-    parser.add_argument('--clusters', type=int, default=26,
+    parser.add_argument('--clusters', type=int, default=18,
                         help='number of clusters to be divided')
     parser.add_argument('--data_dir', type=str, default='data',
                         help='directory for the input data')
@@ -48,7 +48,7 @@ if __name__ == '__main__':
                         type=str, help='directory for data')
     parser.add_argument('-n', '--max_ngram', type=int, default=5,
                         help='max n-gram of words to use')
-    parser.add_argument('--word_dim', type=int, default=3,
+    parser.add_argument('--word_dim', type=int, default=5,
                         help='dimensions for words representation')
     parser.add_argument('-x', '--perplexity', type=int,
                         default=25, help='perplexity param for t-SNE')
