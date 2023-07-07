@@ -39,8 +39,8 @@ class Timer(ContextDecorator):
         elapsed_time = time.perf_counter() - self._start_time
         self._start_time = None
 
-        # Report elapsed time
-        if self.logger:
+        # Report elapsed time only if it is greater than 0.5s
+        if self.logger and elapsed_time > 0.5:
             if self.name:
                 text = f'{self.name} {self.text.lower()}'
             else:
