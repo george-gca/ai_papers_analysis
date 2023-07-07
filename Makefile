@@ -6,6 +6,7 @@
 
 DOCKERFILE_CONTEXT = $(PWD)
 DOCKERFILE = $(PWD)/Dockerfile
+DATA_DIR = $(HOME)/datasets/ai_papers
 WORK_DIR = $(PWD)
 RUN_STRING = bash start_here.sh
 
@@ -17,11 +18,13 @@ CONTAINER_NAME = papers-analysis-$(USER)-$(shell echo $$STY | cut -d'.' -f2)
 CONTAINER_FILE = papers-analysis-$(USER).tar
 HOSTNAME = docker-$(shell hostname)
 IMAGE_NAME = $(USER)/ai-papers-analysis
+DATA_PATH = /work/data
 WORK_PATH = /work
 
 PDB_MOUNT_STRING = --mount type=bind,source=/home/$(USER)/.pdbhistory,target=/home/$(USER)/.pdbhistory
 RUN_CONFIG_STRING = --name $(CONTAINER_NAME) --hostname $(HOSTNAME) --rm -it --dns 8.8.8.8 \
 	--userns=host --ipc=host --ulimit memlock=-1 -w $(WORK_PATH) $(IMAGE_NAME):latest
+DATA_MOUNT_STRING = --mount type=bind,source=$(DATA_DIR),target=$(DATA_PATH)
 WORK_MOUNT_STRING = --mount type=bind,source=$(WORK_DIR),target=$(WORK_PATH)
 
 # ==================================================================
@@ -60,6 +63,7 @@ kill:
 run:
 	docker run \
 		$(WORK_MOUNT_STRING) \
+		$(DATA_MOUNT_STRING) \
 		$(PDB_MOUNT_STRING) \
 		$(RUN_CONFIG_STRING) \
 		$(RUN_STRING)
@@ -74,6 +78,7 @@ save:
 start:
 	docker run \
 		$(WORK_MOUNT_STRING) \
+		$(DATA_MOUNT_STRING) \
 		$(PDB_MOUNT_STRING) \
 		$(RUN_CONFIG_STRING)
 
@@ -83,4 +88,3 @@ test:
 	nvidia-docker run \
 		$(RUN_CONFIG_STRING) \
 		python -V
-
