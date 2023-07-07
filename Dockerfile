@@ -2,7 +2,7 @@
 # ==================================================================
 
 # FROM python:latest
-FROM python:3.10
+FROM python:3.11
 
 ARG GROUPID=901
 ARG GROUPNAME=fasttext
@@ -56,7 +56,8 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
         pyarrow \
         scikit-learn \
         top2vec \
-        tqdm && \
+        tqdm \
+        ydata-profiling && \
 
 # ==================================================================
 # config & cleanup
