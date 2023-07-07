@@ -31,7 +31,7 @@ if __name__ == '__main__':
                         type=str, help='directory for data')
     parser.add_argument('-n', '--max_ngram', type=int, default=5,
                         help='max n-gram of words to use')
-    parser.add_argument('-p', '--paper_dim', type=int, default=5,
+    parser.add_argument('-p', '--paper_dim', type=int, default=3,
                         help='dimensions for paper representation')
     parser.add_argument('-x', '--perplexity', type=int,
                         default=25, help='perplexity param for t-SNE')

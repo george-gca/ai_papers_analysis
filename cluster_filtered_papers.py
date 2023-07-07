@@ -172,7 +172,7 @@ if __name__ == '__main__':
                         help='name to be used for experiment')
     parser.add_argument('-n', '--max_ngram', type=int, default=5,
                         help='max n-gram of words to use')
-    parser.add_argument('-p', '--paper_dim', type=int, default=5,
+    parser.add_argument('-p', '--paper_dim', type=int, default=3,
                         help='dimensions for paper representation')
     parser.add_argument('-s', '--similars', type=int, default=3,
                         help='number of related words to each of the keywords to include in search')
