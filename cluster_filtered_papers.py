@@ -60,7 +60,14 @@ def filter_and_cluster_papers(args: argparse.Namespace):
             exclude_keywords.append(k[1:])
 
     results, _ = p2v.find_by_keywords(
-        tuple(keywords), args.count, conference=args.conference, year=args.year, exclude_keywords=tuple(exclude_keywords), search_str=args.keywords)
+        tuple(keywords),
+        args.count,
+        conference=args.conference,
+        year=args.year,
+        exclude_keywords=tuple(exclude_keywords),
+        search_str=args.keywords,
+        similars=args.similars,
+        )
 
     if len(results) <= 0:
         _logger.print('No papers found.')
@@ -167,6 +174,8 @@ if __name__ == '__main__':
                         help='max n-gram of words to use')
     parser.add_argument('-p', '--paper_dim', type=int, default=3,
                         help='dimensions for paper representation')
+    parser.add_argument('-s', '--similars', type=int, default=3,
+                        help='number of related words to each of the keywords to include in search')
     parser.add_argument('--suffix', default='_70_clusters',
                         type=str, help='suffix of model files to use')
     parser.add_argument('-x', '--perplexity', type=int,
