@@ -16,7 +16,7 @@ RUN_STRING = bash start_here.sh
 CONTAINER_NAME = papers-analysis-$(USER)-$(shell echo $$STY | cut -d'.' -f2)
 CONTAINER_FILE = papers-analysis-$(USER).tar
 HOSTNAME = docker-$(shell hostname)
-IMAGE_NAME = $(USER)/papers-analysis
+IMAGE_NAME = $(USER)/ai-papers-analysis
 WORK_PATH = /work
 
 PDB_MOUNT_STRING = --mount type=bind,source=/home/$(USER)/.pdbhistory,target=/home/$(USER)/.pdbhistory
