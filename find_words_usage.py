@@ -97,13 +97,15 @@ def _cluster_new_words(new_words_usage: List[Tuple[str, int]], paper_finder: Pap
                              title=name,
                              template_filename=name)
 
-    _logger.print(f'Reducing word_vector from {word_vector.shape[1]} to 3 dims')
-    tsne = TSNE(perplexity=25, n_components=3, init='pca', n_iter=2000,
+    n_dimensions = 5
+    _logger.print(f'Reducing word_vector from {word_vector.shape[1]} to {n_dimensions} dims')
+    tsne = TSNE(perplexity=25, n_components=n_dimensions, init='pca', n_iter=2000,
                 n_jobs=2*multiprocessing.cpu_count()//3)
     word_vector = tsne.fit_transform(word_vector)
 
-    _logger.print(f'Creating 10 clusters')
-    estimator = KMeans(init='k-means++', n_clusters=10, n_init=10)
+    n_clusters = 10
+    _logger.print(f'Creating {n_clusters} clusters')
+    estimator = KMeans(init='k-means++', n_clusters=n_clusters, n_init=10)
     estimator.fit(word_vector)
     cluster_ids = estimator.labels_
 
@@ -484,7 +486,7 @@ if __name__ == '__main__':
         rows = _sort_rows(rows)
         table.add_rows(rows)
         table.set_style(MARKDOWN)
-        _logger.print(table)
+        _logger.print(f'\n{table}')
 
         # print groups of words that increased papers using it
         _logger.print(f'\nGroup of words that increased papers using it:\n')
@@ -555,7 +557,7 @@ if __name__ == '__main__':
         rows = _sort_rows(rows)
         table.add_rows(rows)
         table.set_style(MARKDOWN)
-        _logger.print(table)
+        _logger.print(f'\n{table}')
 
         # print groups of words that usage increased
         _logger.print(f'\nGroup of words that usage increased:\n')
