@@ -266,12 +266,16 @@ class PaperFinderTrainer(PaperFinder):
         for i in tqdm(range(clusters), desc='Generating clusters of frequent words', ncols=TQDM_NCOLS):
             cluster_papers_index = [j for j in range(self.n_papers) if self.paper_cluster_ids[j] == i]
 
-            counter = Counter(self.papers[cluster_papers_index[0]].abstract_freq)
-            for j in cluster_papers_index[1:]:
-                counter += Counter(self.papers[j].abstract_freq)
+            if len(cluster_papers_index) > 0:
+                counter = Counter(self.papers[cluster_papers_index[0]].abstract_freq)
+                for j in cluster_papers_index[1:]:
+                    counter += Counter(self.papers[j].abstract_freq)
 
-            abstract = dict(counter)
-            self.cluster_abstract_freq.append(sorted(abstract.items(), key=lambda x: x[1], reverse=True))
+                abstract = dict(counter)
+                self.cluster_abstract_freq.append(sorted(abstract.items(), key=lambda x: x[1], reverse=True))
+
+            else:
+                self.cluster_abstract_freq.append([])
 
     def convert_text_with_phrases(self, src_file: Path, dest_file: Path, column: str = 'abstract') -> None:
         if 'csv' in src_file.suffix:
