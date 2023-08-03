@@ -5,16 +5,17 @@ if [[ $HOSTNAME != "docker-"* ]] && (hash poetry 2>/dev/null); then
 fi
 
 # cluster_conferences=1
-# find_words_usage_over_conf=1
-# train_top2vec=1
-top2vec=1
+find_words_usage_over_conf=1
+train_top2vec=1
+# top2vec=1
 
 searches=(
-      "bert"
-      "bert_based"
+      # "bert"
+      # "bert_based"
       "capsule"
       "catastrophic_forgetting"
       "continual_learning"
+      "dall_e"
       "explainability"
       "explanatory_interactive_learning"
       "gpt"
@@ -22,6 +23,8 @@ searches=(
       "interactive_learning"
       "interpretability"
       "large_scale pre_training"
+      "llm"
+      "midjourney"
       "model_editing"
       "multimodal_dataset"
       "multimodal_feature"
@@ -34,6 +37,7 @@ searches=(
       "scene_graph"
       "survey"
       "transformer"
+      "transformer_based"
       "visual_question_answering"
       "visual_question_answering new_dataset"
       "visual_reasoning"
