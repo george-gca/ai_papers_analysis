@@ -6,7 +6,7 @@ import multiprocessing
 import logging
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any
 
 import comet_ml
 import numpy as np
@@ -76,14 +76,14 @@ IGNORE_SET = {
     }
 
 
-def _add_abstract(row: pd.Series, words: List[str], unique_words: List[str]) -> None:
+def _add_abstract(row: pd.Series, words: list[str], unique_words: list[str]) -> None:
     words_list = [w for w in row.clean_title.split() if len(w) > 1]
     words_list += [w for w in row.abstract.split() if len(w) > 1]
     words += words_list
     unique_words += list(set(words_list))
 
 
-def _cluster_new_words(new_words_usage: List[Tuple[str, int]], paper_finder: PaperFinderTrainer,
+def _cluster_new_words(new_words_usage: list[tuple[str, int]], paper_finder: PaperFinderTrainer,
                        conference: str, year: int, experiment: comet_ml.Experiment) -> None:
     word_vector = np.zeros([len(new_words_usage), paper_finder.word_dim])
     for i, word_count in enumerate(new_words_usage):
@@ -118,12 +118,12 @@ def _cluster_new_words(new_words_usage: List[Tuple[str, int]], paper_finder: Pap
                              template_filename=f'{name}_clusters')
 
 
-def _create_conferences_stats(conferences: List[str],
-                              abstract_files: List[str]) -> \
-                              Tuple[List[Dict[str, int]],
-                                  List[Dict[str, int]],
-                                  List[Set[str]],
-                                  List[int]]:
+def _create_conferences_stats(conferences: list[str],
+                              abstract_files: list[str]) -> \
+                              tuple[list[dict[str, int]],
+                                  list[dict[str, int]],
+                                  list[set[str]],
+                                  list[int]]:
     """
     Create statistics from each conference.
 
@@ -199,7 +199,7 @@ def _create_conferences_stats(conferences: List[str],
     return occurrence_of_words_dict, papers_with_word_dict, unique_words, n_papers
 
 
-def _filter_and_cluster_papers(new_words_usage: List[Tuple[str, int]], paper_finder: PaperFinderTrainer,
+def _filter_and_cluster_papers(new_words_usage: list[tuple[str, int]], paper_finder: PaperFinderTrainer,
                                conference: str, year: int,
                                experiment: comet_ml.Experiment, args: argparse.Namespace) -> None:
 
@@ -224,8 +224,11 @@ def _filter_and_cluster_papers(new_words_usage: List[Tuple[str, int]], paper_fin
     # comet ml logging
     name = f'{conference}_{year}_papers_with_new_words'
 
-    _logger.print(f'\nStep 1: Build paper representation vectors with fasttext.')
-    paper_finder.build_paper_vectors(data_dir / f'abstracts_{args.max_ngram}gram.feather', suffix='_pwc', filter_titles=papers_to_keep)
+    _logger.print('\nStep 1: Build paper representation vectors with fasttext.')
+    paper_finder.build_paper_vectors(
+        data_dir / f'abstracts_{args.max_ngram}gram.feather',
+        suffix='_pwc',
+        filter_titles=papers_to_keep)
 
     # log conference paper vectors to comet ml
     paper_titles = [['Title', 'Conference', 'Year', 'PDF']]
@@ -249,12 +252,13 @@ def _filter_and_cluster_papers(new_words_usage: List[Tuple[str, int]], paper_fin
 
     for i in range(clusters):
         cluster_keywords = paper_finder.cluster_abstract_freq[i]
-        cluster_keywords = list(islice((paper_finder.abstract_words[w] for w, _ in cluster_keywords if w not in IGNORE_SET), n_keywords))
+        cluster_keywords = list(islice((paper_finder.abstract_words[w] \
+                                        for w, _ in cluster_keywords if w not in IGNORE_SET), n_keywords))
         _logger.print(f'cluster {i+1:02d} keywords: {", ".join(cluster_keywords)}')
 
 
 def _print_most_used_new_words(
-        new_words_usage: List[Tuple[str, int]],
+        new_words_usage: list[tuple[str, int]],
         paper_finder: PaperFinderTrainer,
         n_similar_words: int,
         conference: str,
@@ -338,13 +342,13 @@ def _print_most_used_new_words(
     experiment.log_table(f'{year} most used new words.csv', tabular_data=table.get_formatted_string('csv'), headers=True)
 
 
-def _print_papers_with_words(new_words_usage: List[Tuple[str, int]], paper_finder: PaperFinderTrainer,
+def _print_papers_with_words(new_words_usage: list[tuple[str, int]], paper_finder: PaperFinderTrainer,
                              conference: str, year: int) -> None:
 
     # filter new words that occurs less than 5 times
     keywords = [w for w, c in new_words_usage if c >= 5]
 
-    _logger.print(f'\nFinding papers that uses the new words\n')
+    _logger.print('\nFinding papers that uses the new words\n')
     not_found_keywords = set()
 
     # write this data to a file
@@ -371,7 +375,7 @@ def _print_papers_with_words(new_words_usage: List[Tuple[str, int]], paper_finde
     _logger.print(f'\nNo papers found for words:\n{", ".join(sorted(not_found_keywords))}.')
 
 
-def _sort_rows(rows: List[Any]) -> List[Any]:
+def _sort_rows(rows: list[Any]) -> list[Any]:
     top_rows = [r for r in rows if r[2] == '↑']
     bottom_rows = [r for r in rows if r[2] == '↓']
 
@@ -403,7 +407,7 @@ if __name__ == '__main__':
     #                     help='consider unique words per paper, not count all occurrences of the word')
     args = parser.parse_args()
 
-    assert len(args.conference) > 0, f'You must set a conference of search'
+    assert len(args.conference) > 0, 'You must set a conference of search'
 
     log_dir = Path('logs/').expanduser()
     log_dir.mkdir(exist_ok=True)
@@ -424,7 +428,8 @@ if __name__ == '__main__':
     experiment.log_parameters(args)
 
     # get data
-    occurrence_of_words_dict, papers_with_word_dict, unique_words, n_papers = _create_conferences_stats(conferences, abstract_files)
+    occurrence_of_words_dict, papers_with_word_dict, unique_words, n_papers = \
+        _create_conferences_stats(conferences, abstract_files)
 
     # load embeddings model
     p2v = PaperFinderTrainer(data_dir=data_dir, model_dir=model_dir)
@@ -465,10 +470,15 @@ if __name__ == '__main__':
         words_usage_increased = []
         same_words = {w for w in unique_words[c2].intersection(unique_words[c1]) if w not in IGNORE_SET}
 
-        _logger.print(f'\nWords that had variation in amount of papers that use it (no matter how many times) bigger than {variation_of_word*100}%:\n')
+        _logger.print(f'\nWords that had variation in amount of papers that use it (no matter how many times)'
+                      f' bigger than {variation_of_word*100}%:\n')
         table = PrettyTable()
-        table.field_names = ['Word', 'Variation', f'# occurrences in {conferences[c1].split("/")[1]}', f'% occurrences in {conferences[c1].split("/")[1]}',
-                                                  f'# occurrences in {conferences[c2].split("/")[1]}', f'% occurrences in {conferences[c2].split("/")[1]}']
+        table.field_names = [
+            'Word',
+            'Variation',
+            f'# occurrences in {conferences[c1].split("/")[1]}', f'% occurrences in {conferences[c1].split("/")[1]}',
+            f'# occurrences in {conferences[c2].split("/")[1]}', f'% occurrences in {conferences[c2].split("/")[1]}',
+            ]
         rows = []
 
         for word in same_words:
@@ -501,7 +511,7 @@ if __name__ == '__main__':
             )
 
         # print groups of words that increased papers using it
-        _logger.print(f'\nGroup of words that increased papers using it:\n')
+        _logger.print('\nGroup of words that increased papers using it:\n')
         i = 0
 
         while i < len(words_usage_increased):
@@ -520,7 +530,7 @@ if __name__ == '__main__':
             i += 1
 
         # print groups of words that decreased papers using it
-        _logger.print(f'\nGroup of words that decreased papers using it:\n')
+        _logger.print('\nGroup of words that decreased papers using it:\n')
         i = 0
 
         while i < len(words_usage_decreased):
@@ -543,8 +553,12 @@ if __name__ == '__main__':
 
         _logger.print(f'\nWords that had variation in usage bigger than {variation_in_all_words*100}%:\n')
         table = PrettyTable()
-        table.field_names = ['Word', 'Variation', f'# occurrences in {conferences[c1].split("/")[1]}', f'% occurrences in {conferences[c1].split("/")[1]}',
-                                                  f'# occurrences in {conferences[c2].split("/")[1]}', f'% occurrences in {conferences[c2].split("/")[1]}']
+        table.field_names = [
+            'Word',
+            'Variation',
+            f'# occurrences in {conferences[c1].split("/")[1]}', f'% occurrences in {conferences[c1].split("/")[1]}',
+            f'# occurrences in {conferences[c2].split("/")[1]}', f'% occurrences in {conferences[c2].split("/")[1]}',
+            ]
         rows = []
 
         for word in same_words:
@@ -577,7 +591,7 @@ if __name__ == '__main__':
             )
 
         # print groups of words that usage increased
-        _logger.print(f'\nGroup of words that usage increased:\n')
+        _logger.print('\nGroup of words that usage increased:\n')
         i = 0
 
         while i < len(words_usage_increased):
@@ -596,7 +610,7 @@ if __name__ == '__main__':
             i += 1
 
         # print groups of words that usage decreased
-        _logger.print(f'\nGroup of words that usage decreased:\n')
+        _logger.print('\nGroup of words that usage decreased:\n')
         i = 0
 
         while i < len(words_usage_decreased):

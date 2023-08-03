@@ -2,7 +2,6 @@ import argparse
 import locale
 import logging
 from pathlib import Path
-from typing import List
 
 import comet_ml
 
@@ -16,7 +15,7 @@ _logger = logging.getLogger(__name__)
 locale.setlocale(locale.LC_ALL, '')
 
 
-def define_keywords(keywords_text: str) -> List[str]:
+def define_keywords(keywords_text: str) -> list[str]:
     keywords = keywords_text.strip().lower()
     if '"' in keywords:
         while '"' in keywords:
@@ -107,9 +106,12 @@ def filter_and_cluster_papers(args: argparse.Namespace):
     experiment.set_name(name)
     experiment.log_parameters(args)
 
-    _logger.print(
-        f'\nStep 1: Build paper representation vectors with fasttext.')
-    p2v.build_paper_vectors(data_dir / f'abstracts_{args.max_ngram}gram.feather', suffix='_pwc', filter_titles=papers_to_keep)
+    _logger.print('\nStep 1: Build paper representation vectors with fasttext.')
+    p2v.build_paper_vectors(
+        data_dir / f'abstracts_{args.max_ngram}gram.feather',
+        suffix='_pwc',
+        filter_titles=papers_to_keep,
+        )
     # p2v.build_paper_vectors(data_dir / 'abstracts_clean_pwc.feather', filter_titles=papers_to_keep)
 
 

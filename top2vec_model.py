@@ -39,9 +39,9 @@ def _create_corpus(separator: str, conference: str, year: int) -> None:
         corpus_files = [Path(f'data/{c}/pdfs_clean.csv') for c in conferences_pdfs]
         url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs]
 
-        all_titles = Path(f'data/papers_titles.txt').open('w')
-        all_texts = Path(f'data/papers_contents.txt').open('w')
-        all_urls = Path(f'data/papers_urls.txt').open('w')
+        all_titles = Path('data/papers_titles.txt').open('w')
+        all_texts = Path('data/papers_contents.txt').open('w')
+        all_urls = Path('data/papers_urls.txt').open('w')
 
 
     pbar_files = tqdm(corpus_files)
@@ -93,8 +93,8 @@ def _train_top2vec_model(speed: str, conference: str, year: int) -> None:
         all_titles = Path(f'data/{year}_papers_titles.txt')
         all_texts = Path(f'data/{year}_papers_contents.txt')
     else:
-        all_titles = Path(f'data/papers_titles.txt')
-        all_texts = Path(f'data/papers_contents.txt')
+        all_titles = Path('data/papers_titles.txt')
+        all_texts = Path('data/papers_contents.txt')
 
     all_titles = all_titles.read_text().strip().split('\n')
     all_texts = all_texts.read_text().strip().split('\n')
@@ -212,7 +212,9 @@ if __name__ == '__main__':
         search_suffix = f'{suffix}_{keyword}'
 
         try:
-            topic_words, word_scores, topic_scores, topic_nums = model.search_topics(keywords=[keyword], num_topics=args.n_topics)
+            topic_words, word_scores, topic_scores, topic_nums = \
+                model.search_topics(keywords=[keyword], num_topics=args.n_topics)
+
             for topic_num, topic_score, words, scores in zip(topic_nums, topic_scores, topic_words, word_scores):
                 _logger.print(f'\nTopic {topic_num} has score {topic_score:.3f}')
                 topics_data.append({'Topic': topic_num, 'Score': topic_score})

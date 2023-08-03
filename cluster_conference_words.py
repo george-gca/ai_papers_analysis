@@ -3,7 +3,6 @@ import logging
 import multiprocessing
 from collections import Counter
 from pathlib import Path
-from typing import List
 
 import comet_ml
 import numpy as np
@@ -20,7 +19,7 @@ from utils import setup_log, supported_conferences
 _logger = logging.getLogger(__name__)
 
 
-def _add_abstract(row: pd.Series, unique_words: List[str]) -> None:
+def _add_abstract(row: pd.Series, unique_words: list[str]) -> None:
     words_list = row.clean_title.split()
     words_list += row.abstract.split()
     unique_words += list(set(words_list))
@@ -118,7 +117,7 @@ if __name__ == '__main__':
             f'Reducing word_vector from {word_vector.shape[1]} to {args.word_dim} dims')
         tsne = TSNE(perplexity=args.perplexity, n_components=args.word_dim,
                     init='pca', n_iter=2000, n_jobs=2*multiprocessing.cpu_count()//3)
-        with Timer(name=f'Reducing dimensions'):
+        with Timer(name='Reducing dimensions'):
             word_vector = tsne.fit_transform(word_vector)
 
         _logger.print(f'Creating {args.clusters} clusters')
