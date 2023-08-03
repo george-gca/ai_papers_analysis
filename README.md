@@ -6,7 +6,7 @@ Trying to understand trends in the latest AI papers.
 
 [Docker](https://www.docker.com/) or, for local installation:
 
-- Python 3.10+
+- Python 3.11+
 - [Poetry](https://python-poetry.org/docs/)
 
 > Note: Poetry installation currently not working due to [a bug when installing fasttext](https://github.com/facebookresearch/fastText/pull/1292).
