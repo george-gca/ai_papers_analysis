@@ -206,7 +206,7 @@ def _filter_and_cluster_papers(new_words_usage: list[tuple[str, int]], paper_fin
     data_dir = Path(args.data_dir).expanduser()
 
     # filter new words that occurs less than 5 times
-    keywords = tuple([w for w, c in new_words_usage if c >= 5])
+    keywords = tuple(w for w, c in new_words_usage if c >= 5)
 
     # find papers with new words on this conference/year
     results, _ = paper_finder.find_by_keywords(keywords, -1, similars=3, conference=conference, year=year)
@@ -360,7 +360,7 @@ def _print_papers_with_words(new_words_usage: list[tuple[str, int]], paper_finde
         writer.writerow(['Word', 'Titles'])
 
         for keyword in keywords:
-            results, _ = paper_finder.find_by_keywords(tuple(keyword), -1, similars=0, conference=conference, year=year)
+            results, _ = paper_finder.find_by_keywords(tuple(keyword.split()), -1, similars=0, conference=conference, year=year)
 
             if len(results) > 0:
                 _logger.print(f'\nPapers that use the word: {keyword}')
