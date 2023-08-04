@@ -117,7 +117,7 @@ conferences_pdfs = [c for c in supported_conferences if not c.startswith('kdd') 
 
 
 def recreate_url(url_str: str, conference: str, year: int, is_abstract: bool = False) -> str:
-    if url_str == None or len(url_str) == 0:
+    if url_str is None or len(url_str) == 0:
         return url_str
 
     if url_str.startswith('http://') or url_str.startswith('https://'):
