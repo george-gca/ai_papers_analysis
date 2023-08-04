@@ -339,7 +339,7 @@ def _print_most_used_new_words(
 
     table.set_style(MARKDOWN)
     _logger.print(f'\nMost used new words in {year}:\n\n{table}\n')
-    experiment.log_table(f'{year} most used new words.csv', tabular_data=table.get_formatted_string('csv'), headers=True)
+    experiment.log_table(f'{year} most used new words.csv', tabular_data=table.get_formatted_string('csv').replace('\r', ''), headers=True)
 
 
 def _print_papers_with_words(new_words_usage: list[tuple[str, int]], paper_finder: PaperFinderTrainer,
@@ -506,7 +506,7 @@ if __name__ == '__main__':
         _logger.print(f'\n{table}')
         experiment.log_table(
             f'{year} variation in # of papers using > {variation_of_word*100}%.csv',
-            tabular_data=table.get_formatted_string('csv'),
+            tabular_data=table.get_formatted_string('csv').replace('\r', ''),
             headers=True,
             )
 
@@ -586,7 +586,7 @@ if __name__ == '__main__':
         _logger.print(f'\n{table}')
         experiment.log_table(
             f'{year} variation in usage > {variation_of_word*100}%.csv',
-            tabular_data=table.get_formatted_string('csv'),
+            tabular_data=table.get_formatted_string('csv').replace('\r', ''),
             headers=True,
             )
 
