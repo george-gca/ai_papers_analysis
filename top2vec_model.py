@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 from multiprocessing import cpu_count
 
+import comet_ml
 import pandas as pd
 from top2vec import Top2Vec
 from tqdm import tqdm
@@ -13,7 +14,14 @@ from utils import conferences_pdfs, recreate_url, setup_log
 _logger = logging.getLogger(__name__)
 
 
-def _create_corpus(separator: str, conference: str, year: int, abstracts_only: bool=False, clean_file: bool=True) -> None:
+def _create_corpus(
+        separator: str,
+        conference: str,
+        year: int,
+        experiment: comet_ml.Experiment,
+        abstracts_only: bool=False,
+        clean_file: bool=True,
+        ) -> None:
     if abstracts_only:
         text_file = 'abstracts'
         output_content = 'abstracts'
@@ -95,8 +103,19 @@ def _create_corpus(separator: str, conference: str, year: int, abstracts_only: b
     all_texts.close()
     all_urls.close()
 
+    experiment.log_asset('data/papers_titles.txt', overwrite=True)
+    experiment.log_asset('data/papers_{output_content}.txt', overwrite=True)
+    experiment.log_asset('data/papers_urls.txt', overwrite=True)
 
-def _train_top2vec_model(speed: str, conference: str, year: int, abstracts_only: bool=False, clean_file: bool=True) -> None:
+
+def _train_top2vec_model(
+        speed: str,
+        conference: str,
+        year: int,
+        experiment: comet_ml.Experiment,
+        abstracts_only: bool=False,
+        clean_file: bool=True,
+        ) -> None:
     if abstracts_only:
         output_content = 'abstracts'
 
@@ -141,6 +160,7 @@ def _train_top2vec_model(speed: str, conference: str, year: int, abstracts_only:
         suffix += f'_{year}'
 
     model.save(f'model_data/top2vec_model_{speed}{suffix}')
+    experiment.log_model(f'model_data/top2vec_model_{speed}{suffix}', overwrite=True)
 
 
 if __name__ == '__main__':
@@ -175,24 +195,37 @@ if __name__ == '__main__':
     log_dir = Path('logs/').expanduser()
     log_dir.mkdir(exist_ok=True)
 
+    experiment_name = 'Top2vec'
     suffix = ''
 
     if len(args.conference) > 0:
+        experiment_name += f' {args.conference}'
         suffix += f'_{args.conference}'
     if args.year > 0:
+        experiment_name += f' {args.year}'
         suffix += f'_{args.year}'
     if args.abstracts_only:
+        experiment_name += ' abstracts'
         suffix += '_abstracts'
     if not args.clean_file:
+        experiment_name += ' raw'
         suffix += '_raw'
 
-    setup_log(args.log_level, log_dir / f'top2vec{suffix}.log')
+    log_dir = Path('logs/').expanduser()
+    log_dir.mkdir(exist_ok=True)
+    log_file = f'top2vec{suffix}.log'
+
+    setup_log(args.log_level, log_dir / log_file)
+
+    experiment = comet_ml.Experiment(project_name='AI Papers', auto_metric_logging=False)
+    experiment.set_name(experiment_name)
+    experiment.log_parameters(args)
 
     if args.create_corpus:
-        _create_corpus(args.separator, args.conference, args.year, args.abstracts_only, args.clean_file)
+        _create_corpus(args.separator, args.conference, args.year, experiment, args.abstracts_only, args.clean_file)
 
     if args.train:
-        _train_top2vec_model(args.speed, args.conference, args.year, args.abstracts_only, args.clean_file)
+        _train_top2vec_model(args.speed, args.conference, args.year, experiment, args.abstracts_only, args.clean_file)
 
     if len(args.conference) > 0 and args.year > 0:
         model = Top2Vec.load(f'model_data/top2vec_model_{args.speed}_{args.conference}_{args.year}')
@@ -216,20 +249,25 @@ if __name__ == '__main__':
     topics_words = []
     output_dir = Path('top2vec/').expanduser()
     output_dir.mkdir(exist_ok=True)
+    threshold = 0.5
 
     for topic_num, topic_size, words, scores in zip(topic_nums, topic_sizes, topic_words, word_scores):
         _logger.print(f'\nTopic {topic_num} has {topic_size} documents')
         topics_data.append({'Topic': topic_num, 'Documents': topic_size})
 
-        topic_word_scores = [f'{score:.3f} - {word}' for score, word in zip(scores, words)]
+        topic_word_scores = [f'{score:.3f} - {word}' for score, word in zip(scores, words) if score > threshold]
         topic_word_scores_str = '\n\t'.join(topic_word_scores)
         _logger.print(f'Most important words:\n\t{topic_word_scores_str}')
 
         for score, word in zip(scores, words):
             topics_words.append({'Word': word, 'Score': score, 'Topic': topic_num})
 
-    pd.DataFrame(topics_data).to_csv(output_dir / f'topics{suffix}.csv')
-    pd.DataFrame(topics_words).to_csv(output_dir / f'topics_words{suffix}.csv')
+    df_topics = pd.DataFrame(topics_data)
+    df_topics_words = pd.DataFrame(topics_words)
+    df_topics.to_csv(output_dir / f'topics{suffix}.csv', index=False)
+    df_topics_words.to_csv(output_dir / f'topics_words{suffix}.csv', index=False)
+    experiment.log_table(output_dir / f'topics{suffix}.csv', topics_data, headers=True)
+    experiment.log_table(output_dir / f'topics_words{suffix}.csv', topics_words, headers=True)
 
     for keyword in args.search:
         _logger.print(f'\nSearching for {args.n_topics} topics related to "{keyword}"')
@@ -245,15 +283,22 @@ if __name__ == '__main__':
                 _logger.print(f'\nTopic {topic_num} has score {topic_score:.3f}')
                 topics_data.append({'Topic': topic_num, 'Score': topic_score})
 
-                topic_word_scores = [f'{score:.3f} - {word}' for score, word in zip(scores, words)]
+                topic_word_scores = [f'{score:.3f} - {word}' for score, word in zip(scores, words) if score > threshold]
                 topic_word_scores_str = '\n\t'.join(topic_word_scores)
                 _logger.print(f'Most similar words:\n\t{topic_word_scores_str}')
 
                 for score, word in zip(scores, words):
                     topics_words.append({'Word': word, 'Score': score, 'Topic': topic_num})
 
-            pd.DataFrame(topics_data).to_csv(output_dir / f'topics{search_suffix}.csv')
-            pd.DataFrame(topics_words).to_csv(output_dir / f'topics_words{search_suffix}.csv')
+            df_topics = pd.DataFrame(topics_data)
+            df_topics_words = pd.DataFrame(topics_words)
+            df_topics.to_csv(output_dir / f'topics{search_suffix}.csv', index=False)
+            df_topics_words.to_csv(output_dir / f'topics_words{search_suffix}.csv', index=False)
+            experiment.log_table(output_dir / f'topics{search_suffix}.csv', topics_data, headers=True)
+            experiment.log_table(output_dir / f'topics_words{search_suffix}.csv', topics_words, headers=True)
 
         except ValueError:
             _logger.print(f'\n"{keyword}" has not been learned by the model so it cannot be searched')
+
+    experiment.log_asset(str(log_dir / log_file))
+    experiment.end()
