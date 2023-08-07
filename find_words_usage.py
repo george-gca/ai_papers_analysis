@@ -637,3 +637,4 @@ if __name__ == '__main__':
             i += 1
 
     experiment.log_asset(str(log_dir / log_file))
+    experiment.end()
