@@ -354,7 +354,7 @@ def _print_papers_with_words(
         ) -> None:
 
     # filter new words that occurs less than 5 times
-    keywords = [w for w, c in new_words_usage if c >= 5]
+    keywords = (w for w, c in new_words_usage if c >= 5)
 
     _logger.print('\nFinding papers that uses the new words\n')
     not_found_keywords = set()
@@ -384,8 +384,8 @@ def _print_papers_with_words(
 
 
 def _sort_rows(rows: list[Any]) -> list[Any]:
-    top_rows = [r for r in rows if r[2] == '↑']
-    bottom_rows = [r for r in rows if r[2] == '↓']
+    top_rows = (r for r in rows if r[2] == '↑')
+    bottom_rows = (r for r in rows if r[2] == '↓')
 
     new_rows = sorted(top_rows, key=lambda x: x[0], reverse=True) + sorted(bottom_rows, key=lambda x: x[0])
     return [r[1:] for r in new_rows]
@@ -525,7 +525,7 @@ if __name__ == '__main__':
         while i < len(words_usage_increased):
             word = words_usage_increased[i]
             similar_words = p2v.get_most_similar_words(word, 10)
-            similar_words = [w for _, w in similar_words]
+            similar_words = {w for _, w in similar_words}
             similar_words_group = [w for w in words_usage_increased[i+1:] if w in similar_words]
 
             if len(similar_words_group) > 0:
@@ -544,7 +544,7 @@ if __name__ == '__main__':
         while i < len(words_usage_decreased):
             word = words_usage_decreased[i]
             similar_words = p2v.get_most_similar_words(word, 10)
-            similar_words = [w for _, w in similar_words]
+            similar_words = {w for _, w in similar_words}
             similar_words_group = [w for w in words_usage_decreased[i+1:] if w in similar_words]
 
             if len(similar_words_group) > 0:
@@ -605,7 +605,7 @@ if __name__ == '__main__':
         while i < len(words_usage_increased):
             word = words_usage_increased[i]
             similar_words = p2v.get_most_similar_words(word, 10)
-            similar_words = [w for _, w in similar_words]
+            similar_words = {w for _, w in similar_words}
             similar_words_group = [w for w in words_usage_increased[i+1:] if w in similar_words]
 
             if len(similar_words_group) > 0:
@@ -624,7 +624,7 @@ if __name__ == '__main__':
         while i < len(words_usage_decreased):
             word = words_usage_decreased[i]
             similar_words = p2v.get_most_similar_words(word, 10)
-            similar_words = [w for _, w in similar_words]
+            similar_words = {w for _, w in similar_words}
             similar_words_group = [w for w in words_usage_decreased[i+1:] if w in similar_words]
 
             if len(similar_words_group) > 0:

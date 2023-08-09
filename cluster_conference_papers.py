@@ -62,7 +62,7 @@ if __name__ == '__main__':
     p2v.load_words_model(str(model_dir / f'fasttext_{args.model}_50000w.bin'))
 
     n_keywords = 15
-    not_informative_words = [
+    not_informative_words = {
         'data',
         'learning',
         'method',
@@ -71,8 +71,8 @@ if __name__ == '__main__':
         'problem',
         'result',
         'task',
-        'training'
-    ]
+        'training',
+    }
 
     for i, abstract_file in enumerate(abstract_files):
         # comet ml logging

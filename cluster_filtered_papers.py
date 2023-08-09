@@ -76,7 +76,7 @@ def filter_and_cluster_papers(args: argparse.Namespace):
     _logger.print(f'Keeping {len(papers_to_keep)} papers')
 
     n_keywords = 15
-    not_informative_words = [
+    not_informative_words = {
         'data',
         'learning',
         'method',
@@ -85,8 +85,8 @@ def filter_and_cluster_papers(args: argparse.Namespace):
         'problem',
         'result',
         'task',
-        'training'
-    ]
+        'training',
+    }
 
     # comet ml logging
     if len(args.name) == 0:
