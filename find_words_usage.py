@@ -17,7 +17,7 @@ from sklearn.manifold import TSNE
 from tqdm import tqdm
 
 from paper_finder_trainer import PaperFinderTrainer
-from utils import recreate_url, setup_log, supported_conferences
+from utils import recreate_url, setup_log, SUPPORTED_CONFERENCES
 
 
 _logger = logging.getLogger(__name__)
@@ -425,7 +425,7 @@ if __name__ == '__main__':
 
     data_dir = Path(args.data_dir).expanduser()
     model_dir = Path(args.model_dir).expanduser()
-    conferences = [c for c in supported_conferences if args.conference == c.split('/')[0]]
+    conferences = [c for c in SUPPORTED_CONFERENCES if args.conference == c.split('/')[0]]
 
     abstract_files = [data_dir / c / f'abstracts_{args.max_ngram}gram.csv' for c in conferences]
     # abstract_files = [data_dir / c / 'abstracts_clean.csv' for c in conferences]

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import comet_ml
 from paper_finder_trainer import PaperFinderTrainer
-from utils import recreate_url, setup_log, supported_conferences
+from utils import NOT_INFORMATIVE_WORDS, recreate_url, setup_log, SUPPORTED_CONFERENCES
 
 
 _logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
     data_dir = Path(args.data_dir).expanduser()
     model_dir = Path(args.model_dir).expanduser()
-    conferences = supported_conferences
+    conferences = SUPPORTED_CONFERENCES
 
     if len(args.conference) > 0:
         conferences = [c for c in conferences if c.startswith(args.conference)]
@@ -62,17 +62,6 @@ if __name__ == '__main__':
     p2v.load_words_model(str(model_dir / f'fasttext_{args.model}_50000w.bin'))
 
     n_keywords = 15
-    not_informative_words = {
-        'data',
-        'learning',
-        'method',
-        'model',
-        'network',
-        'problem',
-        'result',
-        'task',
-        'training',
-    }
 
     for i, abstract_file in enumerate(abstract_files):
         # comet ml logging
@@ -111,7 +100,7 @@ if __name__ == '__main__':
         for i in range(args.clusters):
             cluster_keywords = p2v.cluster_abstract_freq[i]
             cluster_keywords = [
-                p2v.abstract_words[w] for w, _ in cluster_keywords if w not in not_informative_words][:n_keywords]
+                p2v.abstract_words[w] for w, _ in cluster_keywords if w not in NOT_INFORMATIVE_WORDS][:n_keywords]
             _logger.print(
                 f'cluster {i+1:02d} keywords: {", ".join(cluster_keywords)}')
 

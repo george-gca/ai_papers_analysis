@@ -6,7 +6,7 @@ from pathlib import Path
 import comet_ml
 
 from paper_finder_trainer import PaperFinderTrainer
-from utils import recreate_url, setup_log
+from utils import NOT_INFORMATIVE_WORDS, recreate_url, setup_log
 
 
 _logger = logging.getLogger(__name__)
@@ -76,17 +76,6 @@ def filter_and_cluster_papers(args: argparse.Namespace):
     _logger.print(f'Keeping {len(papers_to_keep)} papers')
 
     n_keywords = 15
-    not_informative_words = {
-        'data',
-        'learning',
-        'method',
-        'model',
-        'network',
-        'problem',
-        'result',
-        'task',
-        'training',
-    }
 
     # comet ml logging
     if len(args.name) == 0:
@@ -139,7 +128,7 @@ def filter_and_cluster_papers(args: argparse.Namespace):
     for i in range(args.clusters):
         cluster_keywords = p2v.cluster_abstract_freq[i]
         cluster_keywords = [
-            p2v.abstract_words[w] for w, _ in cluster_keywords if w not in not_informative_words][:n_keywords]
+            p2v.abstract_words[w] for w, _ in cluster_keywords if w not in NOT_INFORMATIVE_WORDS][:n_keywords]
         _logger.print(
             f'cluster {i+1:02d} keywords: {", ".join(cluster_keywords)}')
 

@@ -3,7 +3,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 
-supported_conferences = [
+SUPPORTED_CONFERENCES = [
     'aaai/2017',
     'aaai/2018',
     'aaai/2019',
@@ -113,7 +113,23 @@ supported_conferences = [
 ]
 
 
-conferences_pdfs = [c for c in supported_conferences if not c.startswith('kdd') and not c.startswith('sigchi')]
+CONFERENCES_PDFS = [c for c in SUPPORTED_CONFERENCES if not c.startswith('kdd') and not c.startswith('sigchi')]
+
+
+NOT_INFORMATIVE_WORDS = {
+    'base',
+    'data',
+    'deep',
+    'learning',
+    'method',
+    'model',
+    'network',
+    'problem',
+    'result',
+    'setting',
+    'task',
+    'training',
+}
 
 
 def recreate_url(url_str: str, conference: str, year: int, is_abstract: bool = False) -> str:
@@ -124,9 +140,9 @@ def recreate_url(url_str: str, conference: str, year: int, is_abstract: bool = F
         return url_str
 
     conference_lower = conference.lower()
-    supported_conferences_names = set(
-        [c.split('/')[0] for c in supported_conferences] + ['arxiv'])
-    assert conference_lower in supported_conferences_names, f'conference is {conference} and url_str is {url_str}'
+    SUPPORTED_CONFERENCES_names = set(
+        [c.split('/')[0] for c in SUPPORTED_CONFERENCES] + ['arxiv'])
+    assert conference_lower in SUPPORTED_CONFERENCES_names, f'conference is {conference} and url_str is {url_str}'
 
     if conference_lower == 'aaai':
         if year <= 2018:

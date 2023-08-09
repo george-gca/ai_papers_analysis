@@ -8,7 +8,7 @@ import pandas as pd
 from top2vec import Top2Vec
 from tqdm import tqdm
 
-from utils import conferences_pdfs, recreate_url, setup_log
+from utils import CONFERENCES_PDFS, recreate_url, setup_log
 
 
 _logger = logging.getLogger(__name__)
@@ -37,29 +37,29 @@ def _create_corpus(
         text_file += '.csv'
 
     if len(conference) > 0 and year > 0:
-        corpus_files = [Path(f'data/{c}/{text_file}') for c in conferences_pdfs if c == f'{conference}/{year}']
-        url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs if c == f'{conference}/{year}']
+        corpus_files = [Path(f'data/{c}/{text_file}') for c in CONFERENCES_PDFS if c == f'{conference}/{year}']
+        url_files = [Path(f'data/{c}/paper_info.csv') for c in CONFERENCES_PDFS if c == f'{conference}/{year}']
 
         all_titles = Path(f'data/{conference}_{year}_papers_titles.txt').open('w')
         all_texts = Path(f'data/{conference}_{year}_papers_{output_content}.txt').open('w')
         all_urls = Path(f'data/{conference}_{year}_papers_urls.txt').open('w')
     elif len(conference) > 0:
-        corpus_files = [Path(f'data/{c}/{text_file}') for c in conferences_pdfs if c.startswith(conference)]
-        url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs if c.startswith(conference)]
+        corpus_files = [Path(f'data/{c}/{text_file}') for c in CONFERENCES_PDFS if c.startswith(conference)]
+        url_files = [Path(f'data/{c}/paper_info.csv') for c in CONFERENCES_PDFS if c.startswith(conference)]
 
         all_titles = Path(f'data/{conference}_papers_titles.txt').open('w')
         all_texts = Path(f'data/{conference}_papers_{output_content}.txt').open('w')
         all_urls = Path(f'data/{conference}_papers_urls.txt').open('w')
     elif year > 0:
-        corpus_files = [Path(f'data/{c}/{text_file}') for c in conferences_pdfs if c.endswith(str(year))]
-        url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs if c.endswith(str(year))]
+        corpus_files = [Path(f'data/{c}/{text_file}') for c in CONFERENCES_PDFS if c.endswith(str(year))]
+        url_files = [Path(f'data/{c}/paper_info.csv') for c in CONFERENCES_PDFS if c.endswith(str(year))]
 
         all_titles = Path(f'data/{year}_papers_titles.txt').open('w')
         all_texts = Path(f'data/{year}_papers_{output_content}.txt').open('w')
         all_urls = Path(f'data/{year}_papers_urls.txt').open('w')
     else:
-        corpus_files = [Path(f'data/{c}/{text_file}') for c in conferences_pdfs]
-        url_files = [Path(f'data/{c}/paper_info.csv') for c in conferences_pdfs]
+        corpus_files = [Path(f'data/{c}/{text_file}') for c in CONFERENCES_PDFS]
+        url_files = [Path(f'data/{c}/paper_info.csv') for c in CONFERENCES_PDFS]
 
         all_titles = Path('data/papers_titles.txt').open('w')
         all_texts = Path('data/papers_{output_content}.txt').open('w')
@@ -92,7 +92,7 @@ def _create_corpus(
                 titles_set.add(title.lower())
                 all_titles.write(f'{title}\n')
                 all_texts.write(f'{text}\n')
-                conf, year = conferences_pdfs[i].split('/')
+                conf, year = CONFERENCES_PDFS[i].split('/')
                 all_urls.write(f'{recreate_url(str(url), conf, int(year), is_abstract=True)}\n')
 
             all_titles.flush()

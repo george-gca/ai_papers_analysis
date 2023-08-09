@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from paper_finder_trainer import PaperFinderTrainer
 from timer import Timer
-from utils import setup_log, supported_conferences
+from utils import setup_log, SUPPORTED_CONFERENCES
 
 
 _logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     data_dir = Path(args.data_dir).expanduser()
     model_dir = Path(args.model_dir).expanduser()
-    conferences = supported_conferences
+    conferences = SUPPORTED_CONFERENCES
 
     if len(args.conference) > 0:
         conferences = [ c for c in conferences if c.startswith(args.conference) ]
