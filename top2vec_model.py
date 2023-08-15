@@ -62,7 +62,7 @@ def _create_corpus(
         url_files = [Path(f'data/{c}/paper_info.csv') for c in CONFERENCES_PDFS]
 
         all_titles = Path('data/papers_titles.txt').open('w')
-        all_texts = Path('data/papers_{output_content}.txt').open('w')
+        all_texts = Path(f'data/papers_{output_content}.txt').open('w')
         all_urls = Path('data/papers_urls.txt').open('w')
 
 
@@ -104,7 +104,7 @@ def _create_corpus(
     all_urls.close()
 
     experiment.log_asset('data/papers_titles.txt', overwrite=True)
-    experiment.log_asset('data/papers_{output_content}.txt', overwrite=True)
+    experiment.log_asset(f'data/papers_{output_content}.txt', overwrite=True)
     experiment.log_asset('data/papers_urls.txt', overwrite=True)
 
 
@@ -160,7 +160,7 @@ def _train_top2vec_model(
         suffix += f'_{year}'
 
     model.save(f'model_data/top2vec_model_{speed}{suffix}')
-    experiment.log_model(f'model_data/top2vec_model_{speed}{suffix}', overwrite=True)
+    experiment.log_model(f'top2vec_model_{speed}{suffix}', f'model_data/top2vec_model_{speed}{suffix}', overwrite=True)
 
 
 if __name__ == '__main__':
