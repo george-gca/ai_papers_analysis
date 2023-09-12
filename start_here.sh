@@ -57,12 +57,12 @@ if [ -n "$cluster_conferences" ]; then
     echo -e "\nClustering conferences' papers"
     $run_command python cluster_conference_papers.py -l info
 
-    echo -e "\nClustering search results"
-    for search in "${searches[@]}"; do
-        $run_command python cluster_filtered_papers.py "$search" -l info --suffix _50000w_150_clusters_pwc -y 2023
-    	$run_command python cluster_filtered_papers.py "$search" -l info --suffix _50000w_150_clusters_pwc -y 2022
-    	$run_command python cluster_filtered_papers.py "$search" -l info --suffix _50000w_150_clusters_pwc
-    done
+    # echo -e "\nClustering search results"
+    # for search in "${searches[@]}"; do
+        # $run_command python cluster_filtered_papers.py "$search" -l info --suffix _50000w_150_clusters_pwc -y 2023
+    	# $run_command python cluster_filtered_papers.py "$search" -l info --suffix _50000w_150_clusters_pwc -y 2022
+    	# $run_command python cluster_filtered_papers.py "$search" -l info --suffix _50000w_150_clusters_pwc
+    # done
 fi
 
 if [ -n "$find_words_usage_over_conf" ]; then
