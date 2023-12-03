@@ -143,6 +143,7 @@ def _train_top2vec_model(
 
     model = Top2Vec(
             all_texts,
+            embedding_model='doc2vec',
             ngram_vocab=True,
             split_documents=True,
             use_corpus_file=True,
