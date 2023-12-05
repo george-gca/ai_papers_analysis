@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import logging
 from pathlib import Path
 
@@ -45,7 +46,8 @@ if __name__ == '__main__':
 
     data_dir = Path(args.data_dir).expanduser()
     model_dir = Path(args.model_dir).expanduser()
-    conferences = SUPPORTED_CONFERENCES
+    conferences = [f'{c}/{y}' for c in SUPPORTED_CONFERENCES for y in range(2017, datetime.date.today().year + 1)]
+    conferences = [c for c in conferences if (data_dir / c).exists()]
 
     if len(args.conference) > 0:
         conferences = [c for c in conferences if c.startswith(args.conference)]
@@ -53,8 +55,9 @@ if __name__ == '__main__':
     if args.year > 0:
         conferences = [c for c in conferences if c.endswith(str(args.year))]
 
-    # abstract_files = [data_dir / c / f'abstracts_{args.max_ngram}gram.csv' for c in conferences]
-    abstract_files = [data_dir / c / 'abstracts_clean.csv' for c in conferences]
+    # abstract_files = (data_dir / c / f'abstracts_{args.max_ngram}gram.csv' for c in conferences)
+    abstract_files = (data_dir / c / 'abstracts_clean.csv' for c in conferences)
+    abstract_files = [c for c in abstract_files if c.exists()]
 
     _logger.print(f'Clustering papers for {len(conferences)} conferences: {conferences}')
 

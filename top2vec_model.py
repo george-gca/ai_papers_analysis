@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import logging
 from pathlib import Path
 from multiprocessing import cpu_count
@@ -37,34 +38,41 @@ def _create_corpus(
         text_file += '.csv'
 
     if len(conference) > 0 and year > 0:
-        corpus_files = [Path(f'data/{c}/{text_file}') for c in CONFERENCES_PDFS if c == f'{conference}/{year}']
-        url_files = [Path(f'data/{c}/paper_info.csv') for c in CONFERENCES_PDFS if c == f'{conference}/{year}']
+        corpus_files = (Path(f'data/{conference}/{year}/{text_file}'))
+        corpus_files = [c for c in corpus_files if c.exists()]
+        url_files = (Path(f'data/{conference}/{year}/paper_info.csv'))
+        url_files = [u for u in url_files if u.exists()]
 
         all_titles = Path(f'data/{conference}_{year}_papers_titles.txt').open('w')
         all_texts = Path(f'data/{conference}_{year}_papers_{output_content}.txt').open('w')
         all_urls = Path(f'data/{conference}_{year}_papers_urls.txt').open('w')
     elif len(conference) > 0:
-        corpus_files = [Path(f'data/{c}/{text_file}') for c in CONFERENCES_PDFS if c.startswith(conference)]
-        url_files = [Path(f'data/{c}/paper_info.csv') for c in CONFERENCES_PDFS if c.startswith(conference)]
+        corpus_files = (Path(f'data/{conference}/{y}/{text_file}') for y in range(2017, datetime.date.today().year + 1))
+        corpus_files = [c for c in corpus_files if c.exists()]
+        url_files = (Path(f'data/{conference}/{y}/paper_info.csv') for y in range(2017, datetime.date.today().year + 1))
+        url_files = [u for u in url_files if u.exists()]
 
         all_titles = Path(f'data/{conference}_papers_titles.txt').open('w')
         all_texts = Path(f'data/{conference}_papers_{output_content}.txt').open('w')
         all_urls = Path(f'data/{conference}_papers_urls.txt').open('w')
     elif year > 0:
-        corpus_files = [Path(f'data/{c}/{text_file}') for c in CONFERENCES_PDFS if c.endswith(str(year))]
-        url_files = [Path(f'data/{c}/paper_info.csv') for c in CONFERENCES_PDFS if c.endswith(str(year))]
+        corpus_files = (Path(f'data/{c}/{year}/{text_file}') for c in CONFERENCES_PDFS)
+        corpus_files = [c for c in corpus_files if c.exists()]
+        url_files = (Path(f'data/{c}/{year}/paper_info.csv') for c in CONFERENCES_PDFS)
+        url_files = [u for u in url_files if u.exists()]
 
         all_titles = Path(f'data/{year}_papers_titles.txt').open('w')
         all_texts = Path(f'data/{year}_papers_{output_content}.txt').open('w')
         all_urls = Path(f'data/{year}_papers_urls.txt').open('w')
     else:
-        corpus_files = [Path(f'data/{c}/{text_file}') for c in CONFERENCES_PDFS]
-        url_files = [Path(f'data/{c}/paper_info.csv') for c in CONFERENCES_PDFS]
+        corpus_files = (Path(f'data/{c}/{y}/{text_file}') for c in CONFERENCES_PDFS for y in range(2017, datetime.date.today().year + 1))
+        corpus_files = [c for c in corpus_files if c.exists()]
+        url_files = (Path(f'data/{c}/{y}/paper_info.csv') for c in CONFERENCES_PDFS for y in range(2017, datetime.date.today().year + 1))
+        url_files = [u for u in url_files if u.exists()]
 
         all_titles = Path('data/papers_titles.txt').open('w')
         all_texts = Path(f'data/papers_{output_content}.txt').open('w')
         all_urls = Path('data/papers_urls.txt').open('w')
-
 
     titles_set = set()
 
@@ -92,7 +100,8 @@ def _create_corpus(
                 titles_set.add(title.lower())
                 all_titles.write(f'{title}\n')
                 all_texts.write(f'{text}\n')
-                conf, year = CONFERENCES_PDFS[i].split('/')
+                conf = url_file.parents[1].name
+                year = url_file.parents[0].name
                 all_urls.write(f'{recreate_url(str(url), conf, int(year), is_abstract=True)}\n')
 
             all_titles.flush()

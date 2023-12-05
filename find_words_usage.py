@@ -1,10 +1,11 @@
 import argparse
+import datetime
 import csv
-from itertools import islice, pairwise
 import locale
 import multiprocessing
 import logging
 from collections import Counter
+from itertools import islice, pairwise
 from pathlib import Path
 from typing import Any
 
@@ -425,10 +426,12 @@ if __name__ == '__main__':
 
     data_dir = Path(args.data_dir).expanduser()
     model_dir = Path(args.model_dir).expanduser()
-    conferences = [c for c in SUPPORTED_CONFERENCES if args.conference == c.split('/')[0]]
+    conferences = (f'{c}/{y}' for c in SUPPORTED_CONFERENCES for y in range(2017, datetime.date.today().year + 1) if args.conference == c)
+    conferences = [c for c in conferences if (data_dir / c).exists()]
 
-    abstract_files = [data_dir / c / f'abstracts_{args.max_ngram}gram.csv' for c in conferences]
-    # abstract_files = [data_dir / c / 'abstracts_clean.csv' for c in conferences]
+    abstract_files = (data_dir / c / f'abstracts_{args.max_ngram}gram.csv' for c in conferences)
+    # abstract_files = (data_dir / c / 'abstracts_clean.csv' for c in conferences)
+    abstract_files = [c for c in abstract_files if c.exists()]
 
     # set up comet experiment
     experiment = comet_ml.Experiment(project_name='AI Papers', auto_metric_logging=False)
