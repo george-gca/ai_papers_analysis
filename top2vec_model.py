@@ -259,7 +259,7 @@ if __name__ == '__main__':
     topics_words = []
     output_dir = Path('top2vec/').expanduser()
     output_dir.mkdir(exist_ok=True)
-    threshold = 0.5
+    threshold = 0.7
 
     for topic_num, topic_size, words, scores in zip(topic_nums, topic_sizes, topic_words, word_scores):
         _logger.print(f'\nTopic {topic_num} has {topic_size} documents')
