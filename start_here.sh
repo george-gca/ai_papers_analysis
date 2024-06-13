@@ -92,9 +92,11 @@ if [ -n "$find_words_usage_over_conf" ]; then
 fi
 
 if [ -n "$train_top2vec" ]; then
-    $run_command python top2vec_model.py -c -t --search ${searches[*]}
+    # $run_command python top2vec_model.py -c -t --search ${searches[*]}
     $run_command python top2vec_model.py -c -t --year 2023
+    $run_command python top2vec_model.py -c -t --year 2024
 elif [ -n "$top2vec" ]; then
-    $run_command python top2vec_model.py --search ${searches[*]}
+    # $run_command python top2vec_model.py --search ${searches[*]}
     $run_command python top2vec_model.py --year 2023
+    $run_command python top2vec_model.py --year 2024
 fi
