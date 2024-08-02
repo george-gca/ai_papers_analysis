@@ -9,7 +9,7 @@ import pandas as pd
 from top2vec import Top2Vec
 from tqdm import tqdm
 
-from utils import CONFERENCES_PDFS, recreate_url, setup_log
+from utils import CONFERENCES_PDFS, recreate_url_from_code, setup_log
 
 
 _logger = logging.getLogger(__name__)
@@ -92,8 +92,9 @@ def _create_corpus(
 
             assert len(df) == len(df_url), f'df ({len(df)}) and df_url ({len(df_url)}) should have same size'
             df = df.join(df_url['abstract_url'].astype(str))
+            df = df.join(df_url['source_url'].astype(int))
 
-            for title, text, url in zip(tqdm(df['title'], leave=False), df['paper'], df['abstract_url']):
+            for title, text, url, source_url in zip(tqdm(df['title'], leave=False), df['paper'], df['abstract_url'], df['source_url']):
                 if title.lower() in titles_set:
                     continue
 
@@ -102,7 +103,7 @@ def _create_corpus(
                 all_texts.write(f'{text}\n')
                 conf = url_file.parents[1].name
                 year = url_file.parents[0].name
-                all_urls.write(f'{recreate_url(str(url), conf, int(year), is_abstract=True)}\n')
+                all_urls.write(f'{recreate_url_from_code(str(url), source_url, conf, int(year), True)}\n')
 
             all_titles.flush()
             all_texts.flush()
