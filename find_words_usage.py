@@ -18,7 +18,7 @@ from sklearn.manifold import TSNE
 from tqdm import tqdm
 
 from paper_finder_trainer import PaperFinderTrainer
-from utils import recreate_url, setup_log, SUPPORTED_CONFERENCES
+from utils import recreate_url_from_code, setup_log, SUPPORTED_CONFERENCES
 
 
 _logger = logging.getLogger(__name__)
@@ -210,7 +210,7 @@ def _filter_and_cluster_papers(new_words_usage: list[tuple[str, int]], paper_fin
     keywords = tuple(w for w, c in new_words_usage if c >= 5)
 
     # find papers with new words on this conference/year
-    results, _ = paper_finder.find_by_keywords(keywords, -1, similars=3, conference=conference, year=year)
+    results, _ = paper_finder.find_by_keywords(keywords, -1, similar=3, conferences=(conference,), years=(year,))
 
     if len(results) == 0:
         _logger.print('No papers found.')
@@ -233,7 +233,7 @@ def _filter_and_cluster_papers(new_words_usage: list[tuple[str, int]], paper_fin
 
     # log conference paper vectors to comet ml
     paper_titles = [['Title', 'Conference', 'Year', 'PDF']]
-    paper_titles += [[t.title, t.conference, t.year, recreate_url(t.pdf_url, t.conference, t.year)]
+    paper_titles += [[t.title, t.conference, t.year, recreate_url_from_code(t.pdf_url, t.source_url, t.conference, t.year)]
                      for t in paper_finder.papers]
     experiment.log_embedding(paper_finder.paper_vectors, paper_titles, title=name, template_filename=name)
 
@@ -245,7 +245,7 @@ def _filter_and_cluster_papers(new_words_usage: list[tuple[str, int]], paper_fin
 
     # log conference paper vectors clusterized to comet ml
     paper_titles = [['Title', 'Conference', 'Year', 'Cluster', 'PDF']]
-    paper_titles += [[t.title, t.conference, t.year, c, recreate_url(t.pdf_url, t.conference, t.year)]
+    paper_titles += [[t.title, t.conference, t.year, c, recreate_url_from_code(t.pdf_url, t.source_url, t.conference, t.year)]
                      for t, c in zip(paper_finder.papers, paper_finder.paper_cluster_ids)]
     experiment.log_embedding(paper_finder.paper_vectors, paper_titles,
                              title=f'clusters_{name}',
@@ -369,7 +369,7 @@ def _print_papers_with_words(
         writer.writerow(['Word', 'Titles'])
 
         for keyword in keywords:
-            results, _ = paper_finder.find_by_keywords(tuple(keyword.split()), -1, similars=0, conference=conference, year=year)
+            results, _ = paper_finder.find_by_keywords(tuple(keyword.split()), -1, similar=0, conferences=(conference,), years=(year,))
 
             if len(results) > 0:
                 _logger.print(f'\nPapers that use the word: {keyword}')
@@ -465,7 +465,6 @@ if __name__ == '__main__':
         new_words.append(new_words_from)
 
         conference, year = conferences[c2].split('/')
-        year = int(year)
 
         # get the most used new words, most used first
         new_words_usage = {w: occurrence_of_words_dict[c2][w] for w in new_words_from}
@@ -511,15 +510,16 @@ if __name__ == '__main__':
                                papers_with_word_dict[c2][word],
                                f'{papers_in_c2*100:.2f}'])
 
-        rows = _sort_rows(rows)
-        table.add_rows(rows)
-        table.set_style(MARKDOWN)
-        _logger.print(f'\n{table}')
-        experiment.log_table(
-            f'{year} variation in # of papers using > {variation_of_word*100}%.csv',
-            tabular_data=[*table.rows],
-            headers=table.field_names,
-            )
+        if len(rows) > 0:
+            rows = _sort_rows(rows)
+            table.add_rows(rows)
+            table.set_style(MARKDOWN)
+            _logger.print(f'\n{table}')
+            experiment.log_table(
+                f'{year} variation in # of papers using > {variation_of_word*100}%.csv',
+                tabular_data=[*table.rows],
+                headers=table.field_names,
+                )
 
         # print groups of words that increased papers using it
         _logger.print('\nGroup of words that increased papers using it:\n')
@@ -591,15 +591,16 @@ if __name__ == '__main__':
                                  occurrence_of_words_dict[c2][word],
                                  f'{words_in_c2*100:.2f}'])
 
-        rows = _sort_rows(rows)
-        table.add_rows(rows)
-        table.set_style(MARKDOWN)
-        _logger.print(f'\n{table}')
-        experiment.log_table(
-            f'{year} variation in usage > {variation_of_word*100}%.csv',
-            tabular_data=[*table.rows],
-            headers=table.field_names,
-            )
+        if len(rows) > 0:
+            rows = _sort_rows(rows)
+            table.add_rows(rows)
+            table.set_style(MARKDOWN)
+            _logger.print(f'\n{table}')
+            experiment.log_table(
+                f'{year} variation in usage > {variation_of_word*100}%.csv',
+                tabular_data=[*table.rows],
+                headers=table.field_names,
+                )
 
         # print groups of words that usage increased
         _logger.print('\nGroup of words that usage increased:\n')

@@ -6,7 +6,7 @@ from pathlib import Path
 import comet_ml
 
 from paper_finder_trainer import PaperFinderTrainer
-from utils import NOT_INFORMATIVE_WORDS, recreate_url, setup_log
+from utils import NOT_INFORMATIVE_WORDS, recreate_url_from_code, setup_log
 
 
 _logger = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ def filter_and_cluster_papers(args: argparse.Namespace):
 
     # log conference paper vectors to comet ml
     paper_titles = [['Title', 'Conference', 'Year', 'PDF']]
-    paper_titles += [[t.title, t.conference, t.year, recreate_url(t.pdf_url, t.conference, t.year)]
+    paper_titles += [[t.title, t.conference, t.year, recreate_url_from_code(t.pdf_url, t.source_url, t.conference, t.year)]
                      for t in p2v.papers]
     experiment.log_embedding(
         p2v.paper_vectors, paper_titles, title=name, template_filename=name)
@@ -119,7 +119,7 @@ def filter_and_cluster_papers(args: argparse.Namespace):
 
     # log conference paper vectors clusterized to comet ml
     paper_titles = [['Title', 'Conference', 'Year', 'Cluster', 'PDF']]
-    paper_titles += [[t.title, t.conference, t.year, c, recreate_url(t.pdf_url, t.conference, t.year)]
+    paper_titles += [[t.title, t.conference, t.year, c, recreate_url_from_code(t.pdf_url, t.source_url, t.conference, t.year)]
                      for t, c in zip(p2v.papers, p2v.paper_cluster_ids)]
     experiment.log_embedding(p2v.paper_vectors, paper_titles,
                              title=f'clusters_{name}',
