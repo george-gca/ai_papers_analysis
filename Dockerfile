@@ -57,6 +57,7 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
         scikit-learn \
         top2vec \
         tqdm \
+        unidecode \
         ydata-profiling && \
 
 # ==================================================================
