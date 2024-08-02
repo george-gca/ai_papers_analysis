@@ -1,11 +1,13 @@
-from itertools import takewhile
 import locale
 import logging
 import math
 import multiprocessing
 import re
-from collections import Counter
+from collections import Counter, defaultdict
+from copy import deepcopy
+from itertools import takewhile
 from pathlib import Path
+from string import punctuation
 from typing import Any
 
 import numpy as np
@@ -15,6 +17,7 @@ from scipy.spatial import KDTree
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
 from tqdm import tqdm
+from unidecode import unidecode
 
 from paper_finder import PaperFinder
 from paperinfo import PaperInfo
@@ -47,6 +50,11 @@ class PaperFinderTrainer(PaperFinder):
         self.model: Any = None
         self.title_search_weight: float = title_search_weight
         self.title_vector_weight: float = title_vector_weight
+        # TODO: change self.words to read/write from/to file with https://github.com/RaRe-Technologies/smart_open
+        # TODO: check if this is the part that consumes most memory with
+        # https://docs.python.org/3/library/tracemalloc.html
+        # https://coderzcolumn.com/tutorials/python/tracemalloc-how-to-trace-memory-usage-in-python-code
+        # https://stackoverflow.com/questions/70525623/measuring-the-allocated-memory-with-tracemalloc
         self.words: list[str] = []
         self.word_dim: int = word_dim
 
@@ -81,7 +89,7 @@ class PaperFinderTrainer(PaperFinder):
 
         # probably the number of most common n-grams that happens more than
         # ngram_threshold times is lesser than a portion of dictionary size
-        top_n = self.max_dictionary_words // (3 * n)
+        top_n = self.max_dictionary_words // (2 * n)
         self.logger.info(
             f'Checking which {n}-grams occurs more than {ngram_threshold:n} times '
             f'from the top {top_n:n} most frequent ones\n')
@@ -137,6 +145,17 @@ class PaperFinderTrainer(PaperFinder):
         self.logger.print(f'File: {file_path} - Words: {len(words):n}')
         self.words += words
 
+    def _remove_sequence_of_unk(self, words: list[str]) -> list[str]:
+        new_words = []
+        for w in words:
+            if w == self.unk:
+                if len(new_words) == 0 or new_words[-1] != self.unk:
+                    new_words.append(w)
+            else:
+                new_words.append(w)
+
+        return new_words
+
     def build_dictionary(self, rebuild=False) -> None:
         with Timer(name='Counting words occurrences'):
             if self.max_dictionary_words > 0:
@@ -151,6 +170,8 @@ class PaperFinderTrainer(PaperFinder):
         self.words = list(w if w in self.dictionary else self.unk
                       for w in tqdm(self.words, unit='word', desc='Rebuilding list of words', ncols=TQDM_NCOLS))
 
+        self.words = self._remove_sequence_of_unk(self.words)
+
         with Timer(name='Counting words occurrences after removing least frequent ones'):
             if self.max_dictionary_words > 0:
                 self.count = Counter(self.words).most_common(self.max_dictionary_words + 1)
@@ -161,12 +182,74 @@ class PaperFinderTrainer(PaperFinder):
         self.logger.print(f'Finished building dictionary with {len(self.dictionary):n} words.\n'
               f'{self.count[0][1]:n} words replaced by {self.count[0][0]} since they are not frequent enough.')
 
+    def _filter_papers_by_title(self, df: pd.DataFrame, titles: set[str]) -> pd.DataFrame:
+        self.logger.info('Filtering papers by title before building vectors')
+        self.logger.info(f'Papers before: {len(df):n}')
+
+        indices = df[df['title'].isin(titles)].index
+        df.drop(indices, inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        self.papers = list(p for i, p in enumerate(self.papers) if i not in indices)
+
+        self.logger.info(f'Papers after: {len(df):n}')
+        self.n_papers = len(self.papers)
+
+        if len(df) != len(self.papers):
+            self.logger.error(f'Sizes {len(df)} and {len(self.papers)} now differ')
+            raise ValueError(f'Sizes {len(df)} and {len(self.papers)} now differ')
+        return df
+
+    def _filter_papers_by_conference(self, df: pd.DataFrame, conferences: set[str]) -> pd.DataFrame:
+        self.logger.info('Filtering papers by conference before building vectors')
+        self.logger.info(f'Papers before: {len(df):n}')
+
+        indices = df[df['conference'].isin(conferences)].index
+        df.drop(indices, inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        self.papers = [p for i, p in enumerate(self.papers) if i not in indices]
+
+        # remove papers from conferences like 'W18-5604' and 'C18-1211', which are usually from aclanthology and are not
+        # with the correct conference name
+        indices = df[df.conference.str.contains(r'[\w][\d]{2}-[\d]{4}')].index
+        df.drop(indices, inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        self.papers = [p for i, p in enumerate(self.papers) if i not in indices]
+
+        self.logger.info(f'Papers after: {len(df):n}')
+        self.n_papers = len(self.papers)
+
+        if len(df) != len(self.papers):
+            self.logger.error(f'Sizes {len(df)} and {len(self.papers)} now differ')
+            raise ValueError(f'Sizes {len(df)} and {len(self.papers)} now differ')
+
+        return df
+
+    def _filter_papers_by_year(self, df: pd.DataFrame, year: int) -> pd.DataFrame:
+        self.logger.info('Filtering papers by year before building vectors')
+        self.logger.info(f'Papers before: {len(df):n}')
+
+        indices = df[df['year'] < year].index
+        df.drop(indices, inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        self.papers = list(p for i, p in enumerate(self.papers) if i not in indices)
+
+        self.logger.info(f'Papers after: {len(df):n}')
+        self.n_papers = len(self.papers)
+
+        if len(df) != len(self.papers):
+            self.logger.error(f'Sizes {len(df)} and {len(self.papers)} now differ')
+            raise ValueError(f'Sizes {len(df)} and {len(self.papers)} now differ')
+
+        return df
+
     def build_paper_vectors(
             self,
             input_file: Path,
             suffix: str='',
             filter_titles: None | set[str] = None,
             filter_conferences: None | set[str] = None,
+            filter_year: None | int = None,
+            keep_na: bool = True,
             ) -> None:
         extension = input_file.suffix[1:] # excluding first char since it is .
         self.load_paper_info(input_file.parent / f'paper_info{suffix}.{extension}')
@@ -179,59 +262,45 @@ class PaperFinderTrainer(PaperFinder):
         self.abstract_words = []
 
         if 'csv' in extension:
-            df = pd.read_csv(input_file, sep='|', dtype=str, keep_default_na=False)
+            df = pd.read_csv(input_file, sep='|', dtype=str, keep_default_na=keep_na)
         elif 'feather' in extension:
             df = pd.read_feather(input_file)
-            df.dropna(inplace=True)
+            if not keep_na:
+                # df.dropna(subset=['conference'])
+                df.dropna(inplace=True)
 
         # self.papers is built from paper_info_pwc.feather
         # df is built from abstracts_5gram.feather
-        assert len(df) == len(self.papers), f'Sizes {len(df)} and {len(self.papers)} differ'
+        if len(df) != len(self.papers):
+            self.logger.error(f'Sizes {len(df)} and {len(self.papers)} differ')
+            raise ValueError(f'Sizes {len(df)} and {len(self.papers)} differ')
 
         if filter_titles is not None and len(filter_titles) > 0:
-            self.logger.info('Filtering papers by title before building vectors')
-            self.logger.info(f'Papers before: {len(df):n}')
-
-            indices = df[df['title'].isin(filter_titles)].index
-            df.drop(indices, inplace=True)
-            df.reset_index(drop=True, inplace=True)
-            self.papers = list(p for i, p in enumerate(self.papers) if i not in indices)
-
-            self.logger.info(f'Papers after: {len(df):n}')
-            self.n_papers = len(self.papers)
-
-            assert len(df) == len(self.papers), f'Sizes {len(df)} and {len(self.papers)} now differ'
+            df = self._filter_papers_by_title(df, filter_titles)
 
         if filter_conferences is not None and len(filter_conferences) > 0:
-            self.logger.info('Filtering papers by conference before building vectors')
-            self.logger.info(f'Papers before: {len(df):n}')
+            df = self._filter_papers_by_conference(df, filter_conferences)
 
-            indices = df[df['conference'].isin(filter_conferences)].index
-            df.drop(indices, inplace=True)
-            df.reset_index(drop=True, inplace=True)
-            self.papers = list(p for i, p in enumerate(self.papers) if i not in indices)
-
-            # remove papers from conferences like 'W18-5604' and 'C18-1211', which are usually from aclanthology and are not
-            # with the correct conference name
-            indices = df[df.conference.str.contains(r'[\w][\d]{2}-[\d]{4}')].index
-            df.drop(indices, inplace=True)
-            df.reset_index(drop=True, inplace=True)
-            self.papers = list(p for i, p in enumerate(self.papers) if i not in indices)
-
-            self.logger.info(f'Papers after: {len(df):n}')
-            self.n_papers = len(self.papers)
-
-            assert len(df) == len(self.papers), f'Sizes {len(df)} and {len(self.papers)} now differ'
-
+        if filter_year is not None:
+            df = self._filter_papers_by_year(df, filter_year)
 
         def _build_paper_vector(row):
             index = row.name
             title = row['clean_title']
 
-            self.paper_vectors[index] += self.model.get_sentence_vector(title) * self.title_vector_weight
-            self.paper_vectors[index] += self.model.get_sentence_vector(row['abstract'])
+            try:
+                self.paper_vectors[index] += self.model.get_sentence_vector(title) * self.title_vector_weight
+                self.paper_vectors[index] += self.model.get_sentence_vector(row['abstract'])
+            except AttributeError:
+                self.logger.error(f'Error on paper {index}: {row["title"]}')
+                self.logger.error(f'{title}')
+                self.logger.error(f'{row["abstract"]}')
+                raise
 
             for word in title.split():
+                # if word not in self.dictionary:
+                #     self.dictionary.add(word)
+
                 if word not in self.abstract_dict:
                     self.abstract_dict[word] = len(self.abstract_dict)
                     self.abstract_words.append(word)
@@ -295,15 +364,15 @@ class PaperFinderTrainer(PaperFinder):
             else:
                 self.cluster_abstract_freq.append([])
 
-    def convert_text_with_phrases(self, src_file: Path, dest_file: Path, column: str = 'abstract') -> None:
+    def convert_text_with_phrases(self, src_file: Path, dest_file: Path, column: str = 'abstract', keep_na: bool = True) -> None:
         if 'csv' in src_file.suffix:
-            df = pd.read_csv(src_file, sep='|', dtype=str, keep_default_na=False)
+            df = pd.read_csv(src_file, sep='|', dtype=str, keep_default_na=keep_na)
         else: # if 'feather' in src_file.suffix:
             df = pd.read_feather(src_file)
 
         self.logger.print(f'Building new text file on {dest_file}')
         tqdm.pandas(unit='word', desc='Replacing words by n-grams', ncols=TQDM_NCOLS)
-        df[column] = df[column].progress_apply(self._replace_words_by_ngrams)
+        df[column] = df[column].astype('str').progress_apply(self._replace_words_by_ngrams)
 
         if 'csv' in dest_file.suffix:
             df.to_csv(dest_file, sep='|', index=False)
@@ -324,6 +393,7 @@ class PaperFinderTrainer(PaperFinder):
 
         if len(ngrams_set) > 0:
             self.logger.info(f'\nOnly {len(ngrams_set):n} {n}-grams occurs more than {ngram_threshold:n} times')
+            ngrams_replace = {ngram.replace('_', ' '): ngram for ngram in ngrams_set}
 
             chunk_size = 500_000 // n # words
             new_words = []
@@ -333,11 +403,11 @@ class PaperFinderTrainer(PaperFinder):
                       desc=f'Replacing words by frequent {n}-grams',
                       ncols=TQDM_NCOLS) as pbar:
 
+                # TODO: check if the end of a chunk is not a n-gram
                 for chunk in _chunks(self.words, chunk_size):
                     words = f' {" ".join(chunk)} '
-                    for ngram in ngrams_set:
-                        regex = f'\b{" ".join(ngram.split("_"))}\b'
-                        words = re.sub(regex, f'\b{ngram}\b', words)
+                    for original, new in ngrams_replace.items():
+                        words = words.replace(f' {original} ', f' {new} ')
                         pbar.update(1)
 
                     new_words += words.strip().split()
@@ -356,8 +426,10 @@ class PaperFinderTrainer(PaperFinder):
     def get_most_similar_words(self, target_word: str, count: int = 5) -> list[tuple[float, str]]:
         return self.model.get_nearest_neighbors(target_word, k=count)
 
-    def load_paper_info(self, paper_info_file: Path) -> None:
-        def _add_paper_info(row, papers_info, accents):
+    def load_paper_info(self, paper_info_file: Path, keep_na: bool = True) -> None:
+        not_allowed = set(punctuation) - {'_'}
+
+        def _add_paper_info(row, papers_info):
             if 'conference' in row:
                 conference = row['conference']
             else:
@@ -368,42 +440,43 @@ class PaperFinderTrainer(PaperFinder):
             else:
                 year = 0
 
+            if 'arxiv_id' in row:
+                arxiv_id = row['arxiv_id']
+            else:
+                arxiv_id = None
+
             # clean paper title
             paper_title = row['title'].lower()
-            for k, v in accents.items():
-                paper_title = re.sub(k, v, paper_title)
-            paper_title = re.sub('([\w]+)[\-\−\–]([\w]+)', '\\1_\\2', paper_title)
-            paper_title = re.sub('[^ \w_/]', '', paper_title)
+            paper_title = unidecode(paper_title).replace('-', '_')
+            for c in not_allowed:
+                if c in paper_title:
+                    paper_title = paper_title.replace(c, '')
 
-            papers_info.append(PaperInfo(title=row['title'],
-                                         clean_title=paper_title.strip(),
-                                         abstract_url=str(row['abstract_url']),
-                                         pdf_url=str(row['pdf_url']),
-                                         conference=conference,
-                                         year=year))
+            papers_info.append(
+                PaperInfo(
+                    abstract_url=str(row['abstract_url']),
+                    arxiv_id=arxiv_id,
+                    clean_title=paper_title.strip(),
+                    conference=conference,
+                    pdf_url=str(row['pdf_url']),
+                    source_url=int(row['source_url']),
+                    title=row['title'],
+                    year=year,
+                    )
+                )
 
         extension = paper_info_file.suffix
         if 'csv' in extension:
-            df = pd.read_csv(paper_info_file, sep=';', keep_default_na=False)
+            df = pd.read_csv(paper_info_file, sep=';', keep_default_na=keep_na)
         elif 'feather' in extension:
             df = pd.read_feather(paper_info_file)
-            df.dropna(inplace=True)
-
+            if not keep_na:
+                df.dropna(inplace=True)
 
         # each paper contains 3 infos (title, abstract_url, paper_url)
-        accents = {
-            '[áàãâä]|´a|`a|\~a|\^a': 'a',
-            'ç': 'c',
-            '[éèêë]|´e|`e|\^e': 'e',
-            '[íïì]|´i|`i': 'i',
-            'ñ': 'n',
-            '[óòôö]|´o|`o|\~o|\^o': 'o',
-            '[úùü]|´u|`u': 'u',
-        }
-
         self.papers: list[PaperInfo] = []
         tqdm.pandas(unit='paper', desc='Reading papers info', ncols=TQDM_NCOLS)
-        df.progress_apply(_add_paper_info, axis=1, papers_info=self.papers, accents=accents)
+        df.progress_apply(_add_paper_info, axis=1, papers_info=self.papers)
 
         self.n_papers = len(self.papers)
         self.logger.print(f'Found info for {self.n_papers:n} papers')
@@ -438,3 +511,35 @@ class PaperFinderTrainer(PaperFinder):
         self.model.save_model(str(model_file))
         self.words = list(self.model.get_words())
         self.logger.print(f'Finished. Dictionary size: {len(self.words):n}')
+
+    def save_paper_vectors(self, suffix: str = '') -> None:
+        self._save_object(self.model_dir / f'abstract_dict{suffix}', self.abstract_dict)
+        self._save_object(self.model_dir / f'abstract_words{suffix}', self.abstract_words)
+        self._save_object(self.model_dir / f'paper_vectors{suffix}', self.paper_vectors)
+        self._save_object(self.model_dir / f'cluster_ids{suffix}', self.paper_cluster_ids)
+        self._save_object(self.model_dir / f'nearest_neighbours{suffix}', self.nearest_neighbours)
+
+        abstract_freq = list(p.abstract_freq for p in self.papers)
+        papers = deepcopy(self.papers)
+        for p in papers:
+            p.abstract_freq = None
+
+        self._save_object(self.model_dir / f'paper_info{suffix}', papers)
+        self._save_object(self.model_dir / f'paper_info_freq{suffix}', abstract_freq)
+
+        # if self.similar_words is not None:
+        #     similar_words = self.similar_words
+        # else:
+        #     similar_words = set(self.words)
+
+        with Timer(name='Creating dict of papers with words'):
+            papers_with_words: dict[str, list[int]] = defaultdict(list)
+
+            for i, p in enumerate(self.papers):
+                for word_pos in p.abstract_freq:
+                    if self.abstract_words[word_pos] in self.dictionary:
+                        papers_with_words[self.abstract_words[word_pos]].append(i)
+
+        self._save_object(self.model_dir / f'papers_with_words{suffix}', papers_with_words)
+
+        self.logger.info(f'Saved {self.n_papers:n} papers info.')
