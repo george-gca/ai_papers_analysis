@@ -1,5 +1,6 @@
 import argparse
 import datetime
+from itertools import islice
 import logging
 from pathlib import Path
 from multiprocessing import cpu_count
@@ -266,7 +267,7 @@ if __name__ == '__main__':
         _logger.print(f'\nTopic {topic_num} has {topic_size} documents')
         topics_data.append({'Topic': topic_num, 'Documents': topic_size})
 
-        topic_word_scores = [f'{score:.3f} - {word}' for score, word in zip(scores, words) if score > threshold]
+        topic_word_scores = [f'{score:.3f} - {word}' for score, word in zip(islice(scores, 10), words)]
         topic_word_scores_str = '\n\t'.join(topic_word_scores)
         _logger.print(f'Most important words:\n\t{topic_word_scores_str}')
 
