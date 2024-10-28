@@ -20,15 +20,17 @@ SUPPORTED_CONFERENCES = [
     'kdd',
     'naacl',
     'neurips',
-    'neurips_workshop',
+    # 'neurips_workshop',
     'sigchi',
     'sigdial',
+    'siggraph',
+    'siggraph-asia',
     'tacl',
     'wacv',
 ]
 
 
-CONFERENCES_PDFS = [c for c in SUPPORTED_CONFERENCES if not c.startswith(('kdd', 'sigchi'))]
+CONFERENCES_PDFS = [c for c in SUPPORTED_CONFERENCES if not c.startswith(('kdd', 'sigchi', 'siggraph', 'siggraph-asia'))]
 
 
 NOT_INFORMATIVE_WORDS = {
@@ -130,7 +132,7 @@ def _recreate_url(url_str: str, conference: str, year: int, is_abstract: bool = 
 
         return f'https://papers.nips.cc/paper/{year}/{url_type}/{url_str}'
 
-    elif conference_lower == 'sigchi':
+    elif conference_lower == 'sigchi' or conference_lower in {'siggraph', 'siggraph-asia'}:
         return f'https://dl.acm.org/doi/abs/{url_str}'
 
     return url_str
@@ -216,7 +218,7 @@ def recreate_url_from_code(url_str: str, code: int, conference: str, year: int, 
 
         return f'https://papers.nips.cc/paper/{year}/{url_type}/{url_str}'
 
-    elif code == 8:
+    elif code == 8 or code == 11:
         return f'https://dl.acm.org/doi/abs/{url_str}'
 
     return url_str

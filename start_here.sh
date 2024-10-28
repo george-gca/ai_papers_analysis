@@ -83,6 +83,8 @@ if [ -n "$find_words_usage_over_conf" ]; then
         "neurips"
         "sigchi"
         "sigdial"
+        "siggraph"
+        "siggraph-asia"
         "tacl"
         "wacv"
     )
